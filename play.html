@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Autoscooter – Controller</title>
+<title>Tafel-Spiele – Controller</title>
 <style>
   :root{--c:#3b82f6;--bg:#0d1220;--card:#1a2238;--txt:#f2f5ff;--mute:#9aa7c4}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -52,13 +52,16 @@
   #gear{position:absolute;top:10px;right:10px;width:54px;height:54px;padding:0;border-radius:50%;font-size:26px;background:#232d4c;z-index:3}
   body.tilt #knobTrack,body.tilt #knob,body.tilt #steerHint{display:none}
   body.tilt #tilt{display:flex}
+  body.nogas #gas,body.nogas #rev{display:none}
+  body.nogas #col{flex:1}
+  body.nogas #turbo{flex:1}
 </style>
 </head>
 <body>
 
 <!-- 1) Raumcode eingeben -->
 <div id="join" class="screen">
-  <h1>🚗 Autoscooter</h1>
+  <h1>🎮 Tafel-Spiele</h1>
   <p>Gib den 4-stelligen Code von der Tafel ein – oder scanne den QR-Code mit der Kamera.</p>
   <input id="code" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD">
   <button class="big" id="goBtn">Los</button>
@@ -110,7 +113,7 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 'use strict';
-const ID_PREFIX='scooter-arena-vb-';
+const ID_PREFIX='tafel-spiele-vb-';
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
@@ -123,7 +126,7 @@ let room=(params.get('room')||'').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4)
 let token=lsGet('scooterToken')||(Math.random().toString(36).slice(2)+Date.now().toString(36));
 lsSet('scooterToken',token);
 
-let mode=lsGet('scooterMode')==='touch'?'touch':'tilt';   // Standard: Neigung
+let mode='tilt';   // Neigung ist immer der Standard (Touch kann man pro Sitzung wählen)
 let me={seat:-1,color:'#3b82f6',name:'',side:''};
 let st={phase:'lobby',alive:false,inRound:false,score:0,target:3,winner:-1,winnerName:'',champion:-1,championName:'',me:-1,n:0};
 let joined=false;
@@ -148,17 +151,18 @@ function render(){
     const fin=st.phase==='final';
     const ready=mode==='touch'||tiltOk;
     $('readyBtn').style.display=ready?'none':'';
-    $('waitTxt').textContent=(fin?(st.champion===me.seat?'🏆 Du bist Champion! ':'🏆 '+st.championName+' ist Champion! '):'')+
+    $('waitTxt').textContent=(fin?(st.champ?'🏆 Du bist Champion! ':'🏆 '+st.championName+' ist Champion! '):'')+
       (ready?'✅ Bereit – gestartet wird an der Tafel. ':'Tippe auf „Bereit“, damit die Neigung funktioniert. ')+st.n+' Spieler verbunden.';
     show('setup');
   } else {
     show('pad');
     let b='';
     if(!st.inRound) b='Du fährst in der nächsten Runde mit …';
-    else if(st.phase==='countdown') b='Gleich geht es los – halte das iPad bereit!';
+    else if(st.phase==='countdown') b=(st.hint||'Gleich geht es los')+' – iPad bereit halten!';
     else if(st.phase==='play') b=st.alive?'':'Du bist raus – schau zu 👀';
-    else if(st.phase==='roundEnd') b=st.winner===me.seat?'🎉 Runde gewonnen!':(st.winnerName?st.winnerName+' gewinnt die Runde':'Unentschieden');
+    else if(st.phase==='roundEnd') b=st.won?'🎉 Gewonnen! ':'' ; b+=st.winnerName||'';
     $('banner').textContent=b;
+    document.body.classList.toggle('nogas',!!st.noGas);
   }
 }
 
@@ -298,7 +302,7 @@ async function setMode(m){
     if(!ok){ m='touch'; }
     else $('note').textContent='Halte das iPad aufrecht wie ein Lenkrad und drehe es. Tipp: Drehsperre im Kontrollzentrum einschalten.';
   }
-  mode=m; lsSet('scooterMode',m); steerTouch=0;
+  mode=m; steerTouch=0;
   sendMsg({k:'mode',mode:m});
   render();
   showEnableBtn();

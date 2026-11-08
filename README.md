@@ -1,42 +1,48 @@
-# Autoscooter-Arena für die ViewSonic-Tafel
+# Tafel-Spiele für die ViewSonic-Tafel
 
-Die Tafel liegt flach und zeigt die Arena. Jedes iPad ist ein Controller (Touch oder Neigung).
+Die Tafel liegt flach und zeigt das Spielfeld. Jedes iPad ist ein Controller (Neigung ist Standard, Touch ist wählbar).
 Gespielt wird mit 1 bis 8 Personen, dazu kommen optional Bots.
 
+## Spiele
+| Spiel | Idee | Optionen |
+|---|---|---|
+| 🚗 Scooter | Rausdrängen, wer zuletzt bleibt, gewinnt | Hindernisse (Pfeiler/Banden), Eis, wandernde Löcher |
+| ⚽ Fußball | Zwei Teams, Ball ins Tor | Tore bis 3/5/7 |
+| 🏒 Hockey | Air-Hockey, jeder bleibt in seiner Hälfte | Tore bis 3/5/7 |
+| 🏍️ Lichtspur | Tron: Wände und Spuren sind tödlich | Siege bis 1/3/5 |
+| 🪙 Münzen | Zeit läuft, 💎 zählt dreifach | Dauer 45/60/90 s |
+
 ## Dateien
-- `index.html` – Startseite mit zwei Knöpfen (Tafel / iPad)
-- `board.html` – läuft auf der Tafel: Spiel, QR-Code, Lobby
+- `index.html` – Startseite (Tafel / iPad)
+- `board.html` – läuft auf der Tafel: Spielwahl, QR-Code, Spiel
 - `play.html` – läuft auf dem iPad: Controller
-
-## Veröffentlichen mit GitHub Pages
-1. Neues Repository auf GitHub anlegen und diese Dateien hochladen.
-2. Settings → Pages → Branch `main`, Ordner `/ (root)` → Save.
-3. Nach etwa einer Minute ist das Spiel unter `https://<name>.github.io/<repo>/` erreichbar.
-
-Lokal testen: `python3 -m http.server 8765` im Ordner starten, dann `http://localhost:8765/board.html` öffnen.
+- `js/core.js` – Verbindung, Lobby, Runden, Anzeige an den Rändern
+- `js/scooter.js`, `js/ballgames.js` (Fußball + Hockey), `js/tron.js`, `js/coins.js` – die Spiele
 
 ## Spielablauf
 1. Auf der Tafel `board.html` öffnen. Dort stehen ein QR-Code und ein 4-stelliger Code.
-2. Auf dem iPad den QR-Code mit der Kamera scannen oder `play.html` öffnen und den Code eintippen.
-3. Jeder bekommt eine Farbe und einen Platz. Das Auto steht auf der Tafel an der richtigen Seite.
-4. Auf dem iPad „Bereit“ tippen (Neigung ist Standard, Touch kann man wählen). Gestartet und neu gestartet wird nur an der Tafel.
-5. Wer als Letzter in der Arena bleibt, gewinnt die Runde. Nach 15 Sekunden schrumpft die Arena.
-6. Der erste mit 3 Siegen ist Champion. Das Ziel lässt sich in der Lobby auf 1, 3 oder 5 ändern.
+2. Auf dem iPad den QR-Code scannen oder `play.html` öffnen und den Code eintippen. Danach „Bereit“ tippen.
+3. Auf der Tafel Spiel und Optionen wählen und START tippen. Start und Neustart gibt es nur an der Tafel.
+4. Teamspiele (Fußball, Hockey): Spieler werden abwechselnd auf Links und Rechts verteilt.
+5. Mit dem ⌂-Knopf oben links (zweimal tippen) geht es zurück zur Spielwahl.
 
 ## Steuerung am iPad
-- **Touch:** links Finger ziehen zum Lenken, rechts GAS, TURBO (alle 3 s) und RÜCK.
-- **Neigung:** iPad aufrecht halten und wie ein Lenkrad drehen. Gas, Turbo und Rück bleiben auf dem Bildschirm.
-  Mit „Geradeaus neu einstellen" wird die Mittelstellung gesetzt. Tipp: Drehsperre im Kontrollzentrum einschalten.
-  Safari fragt beim ersten Mal nach Zugriff auf Bewegungssensoren.
+- **Neigung (Standard):** iPad aufrecht halten und wie ein Lenkrad drehen. Gas, Turbo und Rück sind Knöpfe auf dem Bildschirm.
+  „Geradeaus neu einstellen“ setzt die Mittelstellung. Tipp: Drehsperre im Kontrollzentrum einschalten.
+  Safari fragt beim ersten Mal nach Zugriff auf die Bewegungssensoren.
+- **Touch:** links Finger ziehen zum Lenken, rechts GAS, TURBO und RÜCK.
+- Bei der Lichtspur gibt es nur Lenken und TURBO (Spurt).
 
-## Mehr als 4 Spieler
-Das Spiel ist auf 8 Spieler eingestellt (`MAX_PLAYERS` in `board.html`). Plätze (`SEATS`) und Farben (`COLORS`)
-lassen sich erweitern. Technisch ist auch mehr möglich, nur der Platz am Tafelrand wird irgendwann eng.
+## Neues Spiel hinzufügen
+Datei `js/meinspiel.js` anlegen, mit `GAMES.push({...})` anmelden und in `board.html` einbinden.
+Ein Spiel liefert: `id, name, icon, desc, hint, targets, options, startRound(), update(dt, phase), draw(), bot(p)`.
+`update` gibt am Rundenende `{winners:[Spieler], text, color}` zurück. Als Vorlage dient `js/coins.js`.
+
+## Veröffentlichen mit GitHub Pages
+Repository auf GitHub, Settings → Pages → Branch `main`, Ordner `/ (root)`.
+Lokal testen: `python3 -m http.server 8765` im Ordner starten, dann `http://localhost:8765/board.html` öffnen.
 
 ## Technik und Datenschutz
-- Die iPads schicken ihre Eingaben per WebRTC direkt an die Tafel (Bibliothek PeerJS).
-  Der öffentliche PeerJS-Server vermittelt nur den Verbindungsaufbau.
+- Die iPads schicken ihre Eingaben per WebRTC direkt an die Tafel (PeerJS). Der öffentliche PeerJS-Server vermittelt nur den Verbindungsaufbau.
 - Es werden keine Namen und keine Accounts verwendet, nur Farben.
-- Die Tafel wird nur zum Tippen (Start, Bots) gebraucht, daher stört die Ein-Berührungs-Grenze nicht.
-- Blockiert das Schulnetz Verbindungen zwischen Geräten, hilft oft ein Hotspot, oder die IT bittet man um Freigabe
-  von `0.peerjs.com` (Port 443) und WebRTC/UDP.
+- Blockiert das Schulnetz Verbindungen zwischen Geräten, hilft oft ein Hotspot oder eine Freigabe von `0.peerjs.com` (Port 443) und WebRTC/UDP.
