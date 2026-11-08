@@ -334,10 +334,12 @@ function update(dt){
 // ---------- Zeichnen ----------
 function button(x,y,w,h,label,fn,opts){
   opts=opts||{};
-  buttons.push({x,y,w,h,fn});
+  const key=x+','+y; buttons.push({x,y,w,h,fn,key});
+  const down=pressed===key&&performance.now()<pressUntil;
   ctx.save();
   rrect(ctx,x-w/2,y-h/2,w,h,Math.min(18,h/4));
   ctx.fillStyle=opts.fill||'#1f6feb'; ctx.fill();
+  if(down){ ctx.fillStyle='rgba(255,255,255,.45)'; ctx.fill(); }
   ctx.lineWidth=opts.sel?5:3; ctx.strokeStyle=opts.sel?'#fff':'rgba(255,255,255,.3)'; ctx.stroke();
   ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
   const lines=String(label).split('\n');
@@ -421,10 +423,10 @@ function drawLobby(){
   text('TAFEL-SPIELE',CX,138,38,'#fff','800');
   GAMES.forEach((g,i)=>{
     const x=CX+(i-(GAMES.length-1)/2)*148;
-    button(x,222,140,94,g.icon+'\n'+g.name,()=>{ selectGame(g); beep(600,.06,'triangle'); },
+    button(x,222,142,112,g.icon+'\n'+g.name,()=>{ selectGame(g); beep(600,.06,'triangle'); },
       {fill:g===game?'#1f6feb':'#2a3150',sel:g===game,font:36});
   });
-  text(game.desc,CX,298,21,'#c9d3ee','600');
+  text(game.desc,CX,306,21,'#c9d3ee','600');
   const st=gameState[game.id];
   const items=[];
   for(const d of (game.options||[])){
@@ -435,7 +437,7 @@ function drawLobby(){
   items.push({label:(game.targetLabel||'Siege bis')+': '+st.target,fn:()=>{ const i=tg.indexOf(st.target); st.target=tg[(i+1)%tg.length]; beep(500,.05,'triangle'); }});
   items.forEach((it,i)=>{
     const col=i%2, row=Math.floor(i/2);
-    button(CX+(col?175:-175),362+row*64,340,52,it.label,it.fn,{fill:'#3b4261',font:22});
+    button(CX+(col?175:-175),372+row*74,340,64,it.label,it.fn,{fill:'#3b4261',font:23});
   });
   if(peerReady&&qrCanvas){
     const qs=190;
@@ -446,9 +448,10 @@ function drawLobby(){
   } else text(netStatus||'…',560,625,22,'#9aa7c4','600');
   button(CX+160,590,300,84,'▶  START',()=>startMatch(),{fill:'#1a9b4b',font:34});
   const nb=present().filter(p=>p.bot).length;
-  button(CX+85,682,140,48,'+ Bot',()=>addBot(),{fill:'#3b4261',font:22});
-  button(CX+235,682,140,48,'− Bot',()=>removeBot(),{fill:'#3b4261',font:22});
-  text(present().length+' / '+MAX_PLAYERS+' Spieler'+(nb?' (davon '+nb+' Bot)':''),CX+160,742,19,'#c9d3ee','600');
+  button(CX+62,684,80,60,'−',()=>removeBot(),{fill:'#3b4261',font:38});
+  text('🤖 '+nb+' Bot'+(nb===1?'':'s'),CX+160,686,20,'#fff','800');
+  button(CX+258,684,80,60,'+',()=>addBot(),{fill:'#3b4261',font:38});
+  text(present().length+' / '+MAX_PLAYERS+' Spieler',CX+160,742,19,'#c9d3ee','600');
   if(game.teams) text('Zwei Teams: Links gegen Rechts',CX+160,772,18,'#9aa7c4','600');
 }
 
@@ -473,12 +476,12 @@ function drawOverlay(){
     ctx.restore();
     text('🏆 CHAMPION 🏆',CX,CY-140,46,'#fff','900');
     text(championLabel.toUpperCase(),CX,CY-60,championLabel.length>7?64:84,championColor,'900');
-    button(CX-150,CY+70,260,70,'Nochmal',()=>startMatch(),{fill:'#1a9b4b',font:30});
-    button(CX+150,CY+70,260,70,'Spielwahl',()=>toLobby(),{fill:'#3b4261',font:30});
+    button(CX-150,CY+70,270,84,'Nochmal',()=>startMatch(),{fill:'#1a9b4b',font:30});
+    button(CX+150,CY+70,270,84,'Spielwahl',()=>toLobby(),{fill:'#3b4261',font:30});
     text('Neue Mitspieler können jederzeit per QR-Code beitreten',CX,CY+150,20,'#9aa7c4','600');
   }
   if(phase==='countdown'||phase==='play'||phase==='roundEnd'){
-    button(52,52,56,56,homeConfirm>0?'?':'⌂',()=>{ if(homeConfirm>0){homeConfirm=0;toLobby();} else homeConfirm=2.5; },
+    button(60,60,84,84,homeConfirm>0?'?':'⌂',()=>{ if(homeConfirm>0){homeConfirm=0;toLobby();} else homeConfirm=2.5; },
       {fill:homeConfirm>0?'#b42318':'rgba(255,255,255,.12)',font:30});
   }
 }
@@ -514,15 +517,41 @@ function draw(){
 }
 
 // ---------- Eingabe an der Tafel (nur Tippen, eine Berührung genügt) ----------
+// Robust gegen Tafel-Touch: größere Trefferflächen, auslösen bei Down ODER Up (nur einmal),
+// auch wenn die Tafel den Finger "abbricht" oder leicht wackelt.
+let pressed=null, pressUntil=0, lastFire=0, lastKey='';
+function worldPos(e){
+  const d=devicePixelRatio||1, r=cv.getBoundingClientRect();
+  return {x:((e.clientX-r.left)*d-offX)/scale, y:((e.clientY-r.top)*d-offY)/scale};
+}
+function hitButton(x,y){
+  const M=14;   // Zusatzrand um jeden Knopf (Welt-Pixel)
+  let best=null,bd=1e9;
+  for(const b of buttons){
+    const dx=Math.max(0,Math.abs(x-b.x)-b.w/2), dy=Math.max(0,Math.abs(y-b.y)-b.h/2);
+    if(dx<=M&&dy<=M){ const d=dx*dx+dy*dy+((x-b.x)**2+(y-b.y)**2)*1e-4; if(d<bd){bd=d;best=b;} }
+  }
+  return best;
+}
+function fire(b){
+  const now=performance.now();
+  if(b.key===lastKey&&now-lastFire<350) return;   // doppelte Ereignisse (down+up) ignorieren
+  lastFire=now; lastKey=b.key; pressed=b.key; pressUntil=now+200;
+  b.fn();
+}
 cv.addEventListener('pointerdown',e=>{
+  e.preventDefault();
   audioInit();
   try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').catch(()=>{}); }catch(err){}
-  const d=devicePixelRatio||1;
-  const x=(e.clientX*d-offX)/scale, y=(e.clientY*d-offY)/scale;
-  for(const b of buttons){
-    if(Math.abs(x-b.x)<=b.w/2&&Math.abs(y-b.y)<=b.h/2){ b.fn(); break; }
-  }
+  const w=worldPos(e), b=hitButton(w.x,w.y);
+  if(b){ pressed=b.key; pressUntil=performance.now()+200; fire(b); }
 });
+function upCancel(e){
+  const w=worldPos(e), b=hitButton(w.x,w.y);
+  if(b) fire(b);                       // greift, falls das "Down" verloren ging
+}
+cv.addEventListener('pointerup',upCancel);
+cv.addEventListener('pointercancel',upCancel);
 addEventListener('keydown',e=>{
   if(e.key==='Enter'&&(phase==='lobby'||phase==='final')){audioInit();startMatch();}
   if(e.key==='b') addBot();
