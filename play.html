@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Autoscooter – Controller</title>
+<style>
+  :root{--c:#3b82f6;--bg:#0d1220;--card:#1a2238;--txt:#f2f5ff;--mute:#9aa7c4}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,sans-serif;
+    overflow:hidden;position:fixed;inset:0;width:100%;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none}
+  .screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+    padding:max(16px,env(safe-area-inset-top)) 20px max(16px,env(safe-area-inset-bottom));text-align:center;gap:14px}
+  .screen.on{display:flex}
+  h1{margin:0;font-size:clamp(28px,6vw,56px)}
+  p{margin:0;color:var(--mute);font-size:clamp(15px,2.4vw,22px);max-width:640px}
+  input{font:inherit;font-size:44px;text-transform:uppercase;text-align:center;letter-spacing:.3em;width:6.5em;
+    padding:10px;border-radius:16px;border:3px solid #34406a;background:var(--card);color:var(--txt);
+    -webkit-user-select:text;user-select:text;touch-action:auto}
+  button{font:inherit;color:var(--txt);border:0;border-radius:20px;background:var(--card);padding:14px 22px;font-size:clamp(18px,3vw,28px);
+    font-weight:700;touch-action:none}
+  button.big{background:#1a9b4b;font-size:clamp(24px,4vw,40px);padding:16px 44px}
+  .seg{display:flex;gap:12px}
+  .seg button{border:4px solid transparent;min-width:min(40vw,230px)}
+  .seg button.sel{border-color:var(--c);background:#232d4c}
+  #setup{background:radial-gradient(circle at 50% 0%,color-mix(in srgb,var(--c) 55%,#0d1220),#0d1220 70%)}
+  #badge{display:inline-block;padding:6px 22px;border-radius:999px;background:var(--c);color:#10131a;font-weight:900}
+  #note{min-height:1.4em;color:#ffd24a}
+
+  /* Steuerfläche */
+  #pad{flex-direction:row;align-items:stretch;justify-content:stretch;padding:0;gap:0;border:10px solid var(--c)}
+  #left,#right{flex:1;position:relative;display:flex}
+  #left{align-items:center;justify-content:center;background:#10172b;border-right:2px solid #202a47}
+  #right{padding:16px;gap:16px;background:#0f1424}
+  .pedal{flex:1;border-radius:28px;font-size:clamp(26px,5vw,56px);font-weight:900;letter-spacing:.04em;
+    background:#1b2442;border:4px solid #2c3a6a;color:#fff}
+  .pedal.down{background:var(--c);color:#10131a;border-color:#fff}
+  #gas{flex:2}
+  #col{flex:1;display:flex;flex-direction:column;gap:16px}
+  #turbo.cool{opacity:.35}
+  #knobTrack{position:absolute;left:8%;right:8%;top:50%;height:14px;margin-top:-7px;border-radius:7px;background:#25305a}
+  #knob{position:absolute;top:50%;left:50%;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;background:var(--c);
+    border:4px solid #fff;box-shadow:0 4px 18px rgba(0,0,0,.5)}
+  #steerHint{position:absolute;bottom:12%;left:0;right:0;color:var(--mute);font-size:clamp(14px,2.2vw,20px)}
+  #tilt{display:none;flex-direction:column;align-items:center;gap:18px}
+  #wheel{width:min(30vh,34vw);height:min(30vh,34vw);border-radius:50%;border:14px solid var(--c);position:relative;transition:transform .05s linear}
+  #wheel::after{content:"";position:absolute;top:-14px;left:50%;width:14px;height:34px;margin-left:-7px;background:#fff;border-radius:4px}
+  #banner{position:absolute;top:10px;left:0;right:0;text-align:center;font-weight:800;font-size:clamp(18px,3vw,30px);
+    pointer-events:none;text-shadow:0 2px 8px #000}
+  #gear{position:absolute;top:10px;right:10px;width:54px;height:54px;padding:0;border-radius:50%;font-size:26px;background:#232d4c;z-index:3}
+  body.tilt #knobTrack,body.tilt #knob,body.tilt #steerHint{display:none}
+  body.tilt #tilt{display:flex}
+</style>
+</head>
+<body>
+
+<!-- 1) Raumcode eingeben -->
+<div id="join" class="screen">
+  <h1>🚗 Autoscooter</h1>
+  <p>Gib den 4-stelligen Code von der Tafel ein – oder scanne den QR-Code mit der Kamera.</p>
+  <input id="code" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD">
+  <button class="big" id="goBtn">Los</button>
+</div>
+
+<!-- 2) Verbinden / Fehler -->
+<div id="status" class="screen">
+  <h1 id="statusTitle">Verbinde …</h1>
+  <p id="statusText">Einen Moment bitte.</p>
+  <button id="statusBack" style="display:none">Anderen Code eingeben</button>
+</div>
+
+<!-- 3) Aufstellen / Einstellungen -->
+<div id="setup" class="screen">
+  <h1>Du bist <span id="badge">–</span></h1>
+  <p id="where">–</p>
+  <p><b>Wie willst du lenken?</b></p>
+  <div class="seg">
+    <button id="mTouch">👆 Touch</button>
+    <button id="mTilt">📱 Neigung</button>
+  </div>
+  <p id="note"></p>
+  <button class="big" id="startBtn">▶ Spiel starten</button>
+  <p id="waitTxt"></p>
+</div>
+
+<!-- 4) Steuerung -->
+<div id="pad" class="screen">
+  <div id="banner"></div>
+  <button id="gear" aria-label="Einstellungen">⚙</button>
+  <div id="left">
+    <div id="knobTrack"></div><div id="knob"></div>
+    <div id="steerHint">◀ &nbsp; Finger links/rechts ziehen zum Lenken &nbsp; ▶</div>
+    <div id="tilt">
+      <div id="wheel"></div>
+      <button id="calib">Geradeaus neu einstellen</button>
+    </div>
+  </div>
+  <div id="right">
+    <button class="pedal" id="gas">GAS</button>
+    <div id="col">
+      <button class="pedal" id="turbo">TURBO</button>
+      <button class="pedal" id="rev" style="font-size:clamp(18px,3vw,34px)">RÜCK</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+'use strict';
+const ID_PREFIX='scooter-arena-vb-';
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+// ---------- kleine Helfer für Speicher (kann in privaten Tabs fehlen) ----------
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+
+const params=new URLSearchParams(location.search);
+let room=(params.get('room')||'').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);
+let token=lsGet('scooterToken')||(Math.random().toString(36).slice(2)+Date.now().toString(36));
+lsSet('scooterToken',token);
+
+let mode=lsGet('scooterMode')==='tilt'?'tilt':'touch';
+let me={seat:-1,color:'#3b82f6',name:'',side:''};
+let st={phase:'lobby',alive:false,inRound:false,score:0,target:3,winner:-1,winnerName:'',champion:-1,championName:'',me:-1,n:0};
+let joined=false;
+
+// ---------- Bildschirme ----------
+function show(id){ for(const s of document.querySelectorAll('.screen')) s.classList.toggle('on',s.id===id); }
+function setStatus(title,text,back){
+  $('statusTitle').textContent=title; $('statusText').textContent=text||''; $('statusBack').style.display=back?'':'none';
+  show('status');
+}
+const SIDE={unten:'untere',oben:'obere',links:'linke',rechts:'rechte'};
+
+function render(){
+  document.documentElement.style.setProperty('--c',me.color);
+  document.body.classList.toggle('tilt',mode==='tilt');
+  $('mTouch').classList.toggle('sel',mode==='touch');
+  $('mTilt').classList.toggle('sel',mode==='tilt');
+  if(!joined){ return; }
+  if(st.phase==='lobby'||st.phase==='final'){
+    $('badge').textContent=me.name.toUpperCase();
+    $('where').textContent='Stell dich an die '+(SIDE[me.side]||'')+' Seite der Tafel – dein Auto steht dort in deiner Farbe.';
+    const fin=st.phase==='final';
+    $('startBtn').textContent=fin?'▶ Nochmal spielen':'▶ Spiel starten';
+    $('waitTxt').textContent=fin?(st.champion===me.seat?'🏆 Du bist Champion!':'🏆 '+st.championName+' ist Champion!'):
+      (st.n+' Spieler verbunden – jeder darf starten.');
+    show('setup');
+  } else {
+    show('pad');
+    let b='';
+    if(!st.inRound) b='Du fährst in der nächsten Runde mit …';
+    else if(st.phase==='countdown') b='Gleich geht es los – halte das iPad bereit!';
+    else if(st.phase==='play') b=st.alive?'':'Du bist raus – schau zu 👀';
+    else if(st.phase==='roundEnd') b=st.winner===me.seat?'🎉 Runde gewonnen!':(st.winnerName?st.winnerName+' gewinnt die Runde':'Unentschieden');
+    $('banner').textContent=b;
+  }
+}
+
+// ---------- Verbindung ----------
+let peer=null, conn=null, retryT=null, connOpen=false, stopped=false;
+function hostId(){ return ID_PREFIX+room; }
+
+function startNet(){
+  stopped=false;
+  setStatus('Verbinde mit der Tafel …','Code: '+room);
+  if(peer){ try{peer.destroy();}catch(e){} }
+  peer=new Peer();
+  peer.on('open',()=>connect());
+  peer.on('error',e=>{
+    if(e.type==='peer-unavailable'){ setStatus('Tafel nicht gefunden','Stimmt der Code „'+room+'“? Ich versuche es weiter …',true); scheduleRetry(3000); }
+    else { setStatus('Netzwerkproblem',e.type+' – ich versuche es erneut …',true); scheduleRetry(4000,true); }
+  });
+  peer.on('disconnected',()=>{ try{peer.reconnect();}catch(e){} });
+}
+function scheduleRetry(ms,fresh){
+  if(stopped) return;
+  clearTimeout(retryT);
+  retryT=setTimeout(()=>{ if(stopped) return; if(fresh||!peer||peer.destroyed) startNet(); else connect(); },ms);
+}
+function connect(){
+  if(stopped) return;
+  clearTimeout(retryT);
+  connOpen=false;
+  if(conn){ try{conn.close();}catch(e){} }
+  conn=peer.connect(hostId(),{serialization:'json'});
+  const my=conn;
+  const timeout=setTimeout(()=>{ if(my===conn&&!connOpen){ try{my.close();}catch(e){} scheduleRetry(500); } },8000);
+  my.on('open',()=>{
+    connOpen=true; clearTimeout(timeout);
+    my.send({k:'join',token,mode});
+  });
+  my.on('data',onMsg);
+  my.on('close',()=>{ if(my!==conn) return; connOpen=false; joined=false; setStatus('Verbindung verloren','Verbinde neu …'); scheduleRetry(1200); });
+  my.on('error',()=>{ if(my!==conn) return; connOpen=false; scheduleRetry(1500); });
+}
+function onMsg(d){
+  if(!d||typeof d!=='object') return;
+  if(d.k==='seat'){
+    me={seat:d.seat,color:d.color,name:d.name,side:d.side}; joined=true; render();
+  } else if(d.k==='full'){
+    stopped=true; setStatus('Die Tafel ist voll','Es sind schon alle Plätze belegt.',true);
+  } else if(d.k==='st'){
+    const prev=st.phase; st=d;
+    if(d.phase==='countdown'&&prev!=='countdown') calibrate();
+    if(d.phase==='play'&&prev!=='play'&&navigator.vibrate) try{navigator.vibrate(80);}catch(e){}
+    render();
+  }
+}
+function sendMsg(o){ try{ if(conn&&connOpen) conn.send(o); }catch(e){} }
+
+// ---------- Eingabe: Touch ----------
+let steerTouch=0, gasOn=false, revOn=false, turboOn=false, turboCool=0;
+const knob=$('knob');
+
+(function setupSteer(){
+  const z=$('left'); let id=null, ox=0;
+  z.addEventListener('pointerdown',e=>{
+    if(mode!=='touch'||id!==null) return;
+    id=e.pointerId; ox=e.clientX; try{z.setPointerCapture(id);}catch(err){}
+    steerTouch=0;
+  });
+  z.addEventListener('pointermove',e=>{
+    if(e.pointerId!==id) return;
+    const range=Math.max(90,z.clientWidth*.28);
+    steerTouch=clamp((e.clientX-ox)/range,-1,1);
+    knob.style.transform='translateX('+(steerTouch*z.clientWidth*.32)+'px)';
+  });
+  const end=e=>{ if(e.pointerId!==id) return; id=null; steerTouch=0; knob.style.transform=''; };
+  z.addEventListener('pointerup',end); z.addEventListener('pointercancel',end);
+})();
+
+function hold(el,setter){
+  const on=e=>{ e.preventDefault(); try{el.setPointerCapture(e.pointerId);}catch(err){} setter(true); el.classList.add('down'); };
+  const off=()=>{ setter(false); el.classList.remove('down'); };
+  el.addEventListener('pointerdown',on);
+  el.addEventListener('pointerup',off); el.addEventListener('pointercancel',off); el.addEventListener('lostpointercapture',off);
+}
+hold($('gas'),v=>gasOn=v);
+hold($('rev'),v=>revOn=v);
+hold($('turbo'),v=>{ turboOn=v; if(v&&turboCool<=0){ turboCool=3; $('turbo').classList.add('cool'); } });
+setInterval(()=>{ if(turboCool>0){ turboCool-=.1; if(turboCool<=0) $('turbo').classList.remove('cool'); } },100);
+
+// ---------- Eingabe: Neigung ----------
+let wheel=null, wheelRef=0, tiltSmooth=0, tiltOk=false;
+function onOrient(e){
+  if(e.beta==null||e.gamma==null) return;
+  const b=e.beta*Math.PI/180, g=e.gamma*Math.PI/180;
+  // Richtung „oben" (Schwerkraft) in der Bildschirmebene -> Drehwinkel wie bei einem Lenkrad
+  const ux=-Math.cos(b)*Math.sin(g), uy=Math.sin(b);
+  if(Math.hypot(ux,uy)<.3) return;   // iPad liegt flach: Winkel unzuverlässig
+  const w=Math.atan2(-ux,uy);
+  if(wheel===null) wheelRef=w;
+  wheel=w;
+}
+function wheelDelta(){
+  if(wheel===null) return 0;
+  let d=wheel-wheelRef;
+  while(d>Math.PI) d-=2*Math.PI; while(d<-Math.PI) d+=2*Math.PI;
+  return d*180/Math.PI;
+}
+function calibrate(){ if(wheel!==null) wheelRef=wheel; }
+function tiltSteer(){
+  const deg=wheelDelta(), dz=4, full=38;
+  const v=clamp((Math.abs(deg)-dz)/(full-dz),0,1)*Math.sign(deg);
+  tiltSmooth+=(v-tiltSmooth)*.5;
+  $('wheel').style.transform='rotate('+clamp(deg,-90,90)+'deg)';
+  return tiltSmooth;
+}
+$('calib').addEventListener('click',calibrate);
+
+async function enableTilt(){
+  try{
+    if(typeof DeviceOrientationEvent==='undefined') throw new Error('kein Sensor');
+    if(typeof DeviceOrientationEvent.requestPermission==='function'){
+      const r=await DeviceOrientationEvent.requestPermission();
+      if(r!=='granted'){ $('note').textContent='Zugriff abgelehnt. Safari: Einstellungen → Safari → „Bewegung & Ausrichtung" erlauben.'; return false; }
+    }
+    if(!tiltOk){ addEventListener('deviceorientation',onOrient); tiltOk=true; }
+    setTimeout(()=>{ if(wheel===null && mode==='tilt') $('note').textContent='Keine Sensordaten – bitte Touch wählen oder iPad aufrecht halten.'; },1500);
+    return true;
+  }catch(e){
+    $('note').textContent='Neigung geht auf diesem Gerät nicht – bitte Touch nutzen.';
+    return false;
+  }
+}
+
+// ---------- Moduswahl ----------
+async function setMode(m){
+  $('note').textContent='';
+  if(m==='tilt'){
+    const ok=await enableTilt();
+    if(!ok){ m='touch'; }
+    else $('note').textContent='Halte das iPad aufrecht wie ein Lenkrad und drehe es. Tipp: Drehsperre im Kontrollzentrum einschalten.';
+  }
+  mode=m; lsSet('scooterMode',m); steerTouch=0;
+  sendMsg({k:'mode',mode:m});
+  render();
+}
+$('mTouch').addEventListener('click',()=>setMode('touch'));
+$('mTilt').addEventListener('click',()=>setMode('tilt'));
+$('startBtn').addEventListener('click',()=>sendMsg({k:'start'}));
+$('gear').addEventListener('click',()=>{ show('setup'); });
+// Aus den Einstellungen zurück ins Spiel, wenn gerade gespielt wird
+$('setup').addEventListener('click',e=>{ if(e.target.id==='setup'&&st.phase!=='lobby'&&st.phase!=='final') render(); });
+
+// ---------- Senden (30x pro Sekunde) ----------
+setInterval(()=>{
+  if(!connOpen||!joined) return;
+  if(st.phase==='lobby'||st.phase==='final') return;
+  const s=mode==='tilt'?tiltSteer():steerTouch;
+  sendMsg({k:'in',s:Math.round(s*100)/100,g:gasOn?1:(revOn?-1:0),t:turboOn?1:0});
+},33);
+
+// ---------- Aufwachen halten, Scrollen/Zoomen sperren ----------
+document.addEventListener('touchmove',e=>{ if(!(e.target instanceof HTMLInputElement)) e.preventDefault(); },{passive:false});
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('contextmenu',e=>e.preventDefault());
+async function keepAwake(){ try{ if(navigator.wakeLock) await navigator.wakeLock.request('screen'); }catch(e){} }
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) keepAwake(); });
+document.addEventListener('pointerdown',keepAwake,{once:true});
+
+// ---------- Start ----------
+$('goBtn').addEventListener('click',()=>{
+  const c=$('code').value.toUpperCase().replace(/[^A-Z]/g,'');
+  if(c.length!==4){ $('code').focus(); return; }
+  room=c; startNet();
+});
+$('statusBack').addEventListener('click',()=>{ stopped=true; clearTimeout(retryT); show('join'); });
+$('code').addEventListener('keydown',e=>{ if(e.key==='Enter') $('goBtn').click(); });
+
+if(mode==='tilt'){ // auf iOS braucht die Erlaubnis einen Tipp -> erst beim nächsten Klick auf „Neigung"
+  if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission!=='function') enableTilt();
+  else mode='touch';
+}
+render();
+if(room.length===4) startNet(); else show('join');
+</script>
+</body>
+</html>
