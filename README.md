@@ -40,6 +40,8 @@ Ein Spiel liefert: `id, name, icon, desc, hint, targets, options, startRound(), 
 `update` gibt am Rundenende `{winners:[Spieler], text, color}` zurück. Als Vorlage dient `js/coins.js`.
 
 ## Veröffentlichen mit GitHub Pages
+Nach Änderungen an `js/*.js` die Nummer `?v=` in `board.html` erhöhen, damit Browser die neue Version laden und nicht eine alte aus dem Zwischenspeicher.
+
 Repository auf GitHub, Settings → Pages → Branch `main`, Ordner `/ (root)`.
 Lokal testen: `python3 -m http.server 8765` im Ordner starten, dann `http://localhost:8765/board.html` öffnen.
 

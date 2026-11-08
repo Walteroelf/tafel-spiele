@@ -39,12 +39,15 @@ function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,
 const cv=document.getElementById('c'), ctx=cv.getContext('2d');
 let scale=1,offX=0,offY=0;
 function resize(){
-  const d=devicePixelRatio||1;
-  cv.width=Math.round(innerWidth*d); cv.height=Math.round(innerHeight*d);
+  // Größe aus dem tatsächlich sichtbaren Bereich nehmen (iPad-Safari: 100vh ist höher als der sichtbare Teil)
+  const d=devicePixelRatio||1, r=cv.getBoundingClientRect();
+  cv.width=Math.max(2,Math.round(r.width*d)); cv.height=Math.max(2,Math.round(r.height*d));
   scale=Math.min(cv.width/W,cv.height/H);
   offX=(cv.width-W*scale)/2; offY=(cv.height-H*scale)/2;
 }
-addEventListener('resize',resize); resize();
+addEventListener('resize',resize); addEventListener('orientationchange',()=>setTimeout(resize,200));
+if(window.visualViewport) visualViewport.addEventListener('resize',resize);
+resize();
 
 // ---------- Ton ----------
 let ac=null;
@@ -551,8 +554,9 @@ function draw(){
 // auch wenn die Tafel den Finger "abbricht" oder leicht wackelt.
 let pressed=null, pressUntil=0, lastFire=0, lastKey='';
 function worldPos(e){
-  const d=devicePixelRatio||1, r=cv.getBoundingClientRect();
-  return {x:((e.clientX-r.left)*d-offX)/scale, y:((e.clientY-r.top)*d-offY)/scale};
+  const r=cv.getBoundingClientRect();
+  const bx=(e.clientX-r.left)*cv.width/r.width, by=(e.clientY-r.top)*cv.height/r.height;
+  return {x:(bx-offX)/scale, y:(by-offY)/scale};
 }
 function hitButton(x,y){
   const M=14;   // Zusatzrand um jeden Knopf (Welt-Pixel)
