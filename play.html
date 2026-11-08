@@ -77,11 +77,11 @@
   <p id="where">–</p>
   <p><b>Wie willst du lenken?</b></p>
   <div class="seg">
-    <button id="mTouch">👆 Touch</button>
     <button id="mTilt">📱 Neigung</button>
+    <button id="mTouch">👆 Touch</button>
   </div>
   <p id="note"></p>
-  <button class="big" id="startBtn">▶ Spiel starten</button>
+  <button class="big" id="readyBtn">👍 Bereit</button>
   <p id="waitTxt"></p>
 </div>
 
@@ -95,6 +95,7 @@
     <div id="tilt">
       <div id="wheel"></div>
       <button id="calib">Geradeaus neu einstellen</button>
+      <button id="enableTiltBtn" class="big" style="display:none">📱 Neigung aktivieren</button>
     </div>
   </div>
   <div id="right">
@@ -122,7 +123,7 @@ let room=(params.get('room')||'').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4)
 let token=lsGet('scooterToken')||(Math.random().toString(36).slice(2)+Date.now().toString(36));
 lsSet('scooterToken',token);
 
-let mode=lsGet('scooterMode')==='tilt'?'tilt':'touch';
+let mode=lsGet('scooterMode')==='touch'?'touch':'tilt';   // Standard: Neigung
 let me={seat:-1,color:'#3b82f6',name:'',side:''};
 let st={phase:'lobby',alive:false,inRound:false,score:0,target:3,winner:-1,winnerName:'',champion:-1,championName:'',me:-1,n:0};
 let joined=false;
@@ -145,9 +146,10 @@ function render(){
     $('badge').textContent=me.name.toUpperCase();
     $('where').textContent='Stell dich an die '+(SIDE[me.side]||'')+' Seite der Tafel – dein Auto steht dort in deiner Farbe.';
     const fin=st.phase==='final';
-    $('startBtn').textContent=fin?'▶ Nochmal spielen':'▶ Spiel starten';
-    $('waitTxt').textContent=fin?(st.champion===me.seat?'🏆 Du bist Champion!':'🏆 '+st.championName+' ist Champion!'):
-      (st.n+' Spieler verbunden – jeder darf starten.');
+    const ready=mode==='touch'||tiltOk;
+    $('readyBtn').style.display=ready?'none':'';
+    $('waitTxt').textContent=(fin?(st.champion===me.seat?'🏆 Du bist Champion! ':'🏆 '+st.championName+' ist Champion! '):'')+
+      (ready?'✅ Bereit – gestartet wird an der Tafel. ':'Tippe auf „Bereit“, damit die Neigung funktioniert. ')+st.n+' Spieler verbunden.';
     show('setup');
   } else {
     show('pad');
@@ -299,10 +301,12 @@ async function setMode(m){
   mode=m; lsSet('scooterMode',m); steerTouch=0;
   sendMsg({k:'mode',mode:m});
   render();
+  showEnableBtn();
 }
 $('mTouch').addEventListener('click',()=>setMode('touch'));
 $('mTilt').addEventListener('click',()=>setMode('tilt'));
-$('startBtn').addEventListener('click',()=>sendMsg({k:'start'}));
+$('readyBtn').addEventListener('click',()=>setMode(mode));
+$('enableTiltBtn').addEventListener('click',()=>setMode('tilt'));
 $('gear').addEventListener('click',()=>{ show('setup'); });
 // Aus den Einstellungen zurück ins Spiel, wenn gerade gespielt wird
 $('setup').addEventListener('click',e=>{ if(e.target.id==='setup'&&st.phase!=='lobby'&&st.phase!=='final') render(); });
@@ -332,10 +336,17 @@ $('goBtn').addEventListener('click',()=>{
 $('statusBack').addEventListener('click',()=>{ stopped=true; clearTimeout(retryT); show('join'); });
 $('code').addEventListener('keydown',e=>{ if(e.key==='Enter') $('goBtn').click(); });
 
-if(mode==='tilt'){ // auf iOS braucht die Erlaubnis einen Tipp -> erst beim nächsten Klick auf „Neigung"
-  if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission!=='function') enableTilt();
-  else mode='touch';
+// Neigung ist Standard. Auf dem iPad braucht die Erlaubnis einen Tipp („Bereit"-Knopf oder Knopf im Spiel).
+function showEnableBtn(){
+  const need=mode==='tilt'&&!tiltOk;
+  $('enableTiltBtn').style.display=need?'':'none';
+  $('calib').style.display=need?'none':'';
 }
+if(mode==='tilt'){
+  if(typeof DeviceOrientationEvent==='undefined') mode='touch';
+  else if(typeof DeviceOrientationEvent.requestPermission!=='function') enableTilt();
+}
+showEnableBtn();
 render();
 if(room.length===4) startNet(); else show('join');
 </script>

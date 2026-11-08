@@ -175,9 +175,8 @@ function onMsg(conn,d){
     p.lastIn=performance.now();
   } else if(d.k==='mode'){
     const p=playerOf(conn); if(p&&(d.mode==='touch'||d.mode==='tilt')) p.mode=d.mode;
-  } else if(d.k==='start'){
-    if(phase==='lobby'||phase==='final') startMatch();
   }
+  // Start und Neustart gibt es nur an der Tafel (keine Start-Nachricht von iPads).
 }
 function onClose(conn){
   const p=playerOf(conn);

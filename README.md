@@ -19,7 +19,7 @@ Lokal testen: `python3 -m http.server 8765` im Ordner starten, dann `http://loca
 1. Auf der Tafel `board.html` öffnen. Dort stehen ein QR-Code und ein 4-stelliger Code.
 2. Auf dem iPad den QR-Code mit der Kamera scannen oder `play.html` öffnen und den Code eintippen.
 3. Jeder bekommt eine Farbe und einen Platz. Das Auto steht auf der Tafel an der richtigen Seite.
-4. Auf dem iPad Touch oder Neigung wählen und auf Start tippen (oder an der Tafel auf START).
+4. Auf dem iPad „Bereit“ tippen (Neigung ist Standard, Touch kann man wählen). Gestartet und neu gestartet wird nur an der Tafel.
 5. Wer als Letzter in der Arena bleibt, gewinnt die Runde. Nach 15 Sekunden schrumpft die Arena.
 6. Der erste mit 3 Siegen ist Champion. Das Ziel lässt sich in der Lobby auf 1, 3 oder 5 ändern.
 
