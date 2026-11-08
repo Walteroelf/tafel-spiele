@@ -261,8 +261,27 @@ function sparks(x,y,n,color){
 }
 
 // ---------- Eingaben (iPad oder Bot) ----------
+// Bot-Stärke: schwächere Bots reagieren langsamer, lenken ungenauer und fahren nicht Vollgas.
+const BOT_LEVELS=[
+  {name:'leicht',delay:.30,steer:.65,gas:.55,noise:.5, turbo:0},
+  {name:'mittel',delay:.15,steer:.85,gas:.80,noise:.25,turbo:.35},
+  {name:'schwer',delay:0,  steer:1,  gas:1,  noise:0,  turbo:1},
+];
+let botLevel=0, simT=0;   // simT = Spielzeit in Sekunden
+function botInput(p){
+  const L=BOT_LEVELS[botLevel], now=simT;
+  if(!p.botIn||now-p.botT>=L.delay){
+    const raw=game.bot?game.bot(p):ZERO;
+    p.botT=now;
+    p.botNoise=(Math.random()*2-1)*L.noise;
+    p.botIn={s:clamp(raw.s*L.steer+p.botNoise,-1,1),
+             g:raw.g>0?raw.g*L.gas:raw.g,
+             t:raw.t&&Math.random()<L.turbo?1:0};
+  }
+  return p.botIn;
+}
 function inputOf(p){
-  if(p.bot) return game.bot?game.bot(p):ZERO;
+  if(p.bot) return botInput(p);
   if(!p.conn||performance.now()-p.lastIn>1000) return ZERO;
   return p.input;
 }
@@ -293,7 +312,7 @@ function endRound(res){
   else beep(220,.3,'sawtooth',.06);
 }
 function update(dt){
-  bumpCd-=dt;
+  simT+=dt; bumpCd-=dt;
   if(homeConfirm>0) homeConfirm-=dt;
   const now=performance.now();
   for(let i=0;i<MAX_PLAYERS;i++){   // getrennte iPads in der Lobby nach 12 s entfernen
@@ -448,11 +467,11 @@ function drawLobby(){
   } else text(netStatus||'…',560,625,22,'#9aa7c4','600');
   button(CX+160,590,300,84,'▶  START',()=>startMatch(),{fill:'#1a9b4b',font:34});
   const nb=present().filter(p=>p.bot).length;
-  button(CX+62,684,80,60,'−',()=>removeBot(),{fill:'#3b4261',font:38});
-  text('🤖 '+nb+' Bot'+(nb===1?'':'s'),CX+160,686,20,'#fff','800');
-  button(CX+258,684,80,60,'+',()=>addBot(),{fill:'#3b4261',font:38});
-  text(present().length+' / '+MAX_PLAYERS+' Spieler',CX+160,742,19,'#c9d3ee','600');
-  if(game.teams) text('Zwei Teams: Links gegen Rechts',CX+160,772,18,'#9aa7c4','600');
+  button(CX+62,676,80,60,'−',()=>removeBot(),{fill:'#3b4261',font:38});
+  text('🤖 '+nb+' Bot'+(nb===1?'':'s'),CX+160,678,20,'#fff','800');
+  button(CX+258,676,80,60,'+',()=>addBot(),{fill:'#3b4261',font:38});
+  button(CX+160,742,300,50,'Bot-Stärke: '+BOT_LEVELS[botLevel].name,()=>{ botLevel=(botLevel+1)%BOT_LEVELS.length; beep(500,.05,'triangle'); },{fill:'#3b4261',font:21});
+  text(present().length+' / '+MAX_PLAYERS+' Spieler',CX+160,785,18,'#c9d3ee','600');
 }
 
 function drawOverlay(){
@@ -568,6 +587,6 @@ function startApp(){
   selectGame(GAMES[0]);
   startPeer();
   requestAnimationFrame(frame);
-  window.__game={players,GAMES,selectGame,gameState,addBot,startMatch,toLobby,
+  window.__game={players,GAMES,setBotLevel:v=>{botLevel=v;},selectGame,gameState,addBot,startMatch,toLobby,
     get phase(){return phase;},get game(){return game;},get room(){return room;}}; // zum Testen
 }

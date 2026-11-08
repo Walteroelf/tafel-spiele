@@ -22,7 +22,7 @@ Gespielt wird mit 1 bis 8 Personen, dazu kommen optional Bots.
 ## Spielablauf
 1. Auf der Tafel `board.html` öffnen. Dort stehen ein QR-Code und ein 4-stelliger Code.
 2. Auf dem iPad den QR-Code scannen oder `play.html` öffnen und den Code eintippen. Danach „Bereit“ tippen.
-3. Auf der Tafel Spiel und Optionen wählen und START tippen. Start und Neustart gibt es nur an der Tafel.
+3. Auf der Tafel Spiel und Optionen wählen, bei Bedarf Bots (− / +) und Bot-Stärke (leicht, mittel, schwer; Standard leicht) einstellen und START tippen. Start und Neustart gibt es nur an der Tafel.
 4. Teamspiele (Fußball, Hockey): Spieler werden abwechselnd auf Links und Rechts verteilt.
 5. Mit dem ⌂-Knopf oben links (zweimal tippen) geht es zurück zur Spielwahl.
 
