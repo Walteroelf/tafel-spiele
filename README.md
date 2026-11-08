@@ -1,6 +1,6 @@
 # Tafel-Spiele für die ViewSonic-Tafel
 
-Die Tafel liegt flach und zeigt das Spielfeld. Jedes iPad ist ein Controller (Neigung ist Standard, Touch ist wählbar).
+Die Tafel liegt flach und zeigt das Spielfeld. Jedes iPad ist ein Controller (Neigung ist Standard, Joystick und Schieber sind wählbar).
 Gespielt wird mit 1 bis 8 Personen, dazu kommen optional Bots.
 
 ## Spiele
@@ -30,7 +30,8 @@ Gespielt wird mit 1 bis 8 Personen, dazu kommen optional Bots.
 - **Neigung (Standard):** iPad aufrecht halten und wie ein Lenkrad drehen. Gas, Turbo und Rück sind Knöpfe auf dem Bildschirm.
   „Geradeaus neu einstellen“ setzt die Mittelstellung. Tipp: Drehsperre im Kontrollzentrum einschalten.
   Safari fragt beim ersten Mal nach Zugriff auf die Bewegungssensoren.
-- **Touch:** links Finger ziehen zum Lenken, rechts GAS, TURBO und RÜCK.
+- **Joystick:** Finger links auf den Bildschirm legen und dorthin schieben, wohin das Auto fahren soll. Oben zeigt immer zur Tafelmitte, egal an welcher Seite man steht. Das Gas ist automatisch, TURBO bleibt als Knopf.
+- **Schieber (Touch):** links Finger ziehen zum Lenken, rechts GAS, TURBO und RÜCK.
 - Bei der Lichtspur gibt es nur Lenken und TURBO (Spurt).
 
 ## Neues Spiel hinzufügen

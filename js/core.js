@@ -158,10 +158,11 @@ function onMsg(conn,d){
     beep(700,.08,'triangle'); beep(900,.1,'triangle');
   } else if(d.k==='in'){
     const p=playerOf(conn); if(!p) return;
-    p.input={s:clamp(+d.s||0,-1,1),g:clamp(+d.g||0,-1,1),t:d.t?1:0};
+    p.input={s:clamp(+d.s||0,-1,1),g:clamp(+d.g||0,-1,1),t:d.t?1:0,
+      j:Array.isArray(d.j)?[clamp(+d.j[0]||0,-1,1),clamp(+d.j[1]||0,-1,1)]:null};
     p.lastIn=performance.now();
   } else if(d.k==='mode'){
-    const p=playerOf(conn); if(p&&(d.mode==='touch'||d.mode==='tilt')) p.mode=d.mode;
+    const p=playerOf(conn); if(p&&(d.mode==='touch'||d.mode==='tilt'||d.mode==='joy')) p.mode=d.mode;
   }
   // Start und Neustart gibt es nur an der Tafel.
 }
@@ -280,9 +281,19 @@ function botInput(p){
   }
   return p.botIn;
 }
+// Joystick: Der Stick zeigt in Richtung des Spielers (oben = Tafelmitte). Das Auto dreht sich dorthin, Gas ist automatisch.
+function joyInput(p){
+  const [jx,jy]=p.input.j, mag=Math.hypot(jx,jy), c=p.car;
+  if(!c||mag<.18) return {s:0,g:0,t:p.input.t};
+  const rot=SEATS[p.seat].rot, cs=Math.cos(rot), sn=Math.sin(rot);
+  const wx=jx*cs-jy*sn, wy=jx*sn+jy*cs;
+  const diff=angDiff(Math.atan2(wy,wx),c.a);
+  return {s:clamp(diff*2.5,-1,1),g:clamp(mag*1.15,0,1)*(Math.abs(diff)<1.9?1:.35),t:p.input.t};
+}
 function inputOf(p){
   if(p.bot) return botInput(p);
   if(!p.conn||performance.now()-p.lastIn>1000) return ZERO;
+  if(p.input.j) return joyInput(p);
   return p.input;
 }
 
@@ -418,7 +429,7 @@ function drawBadge(seat,p){
   if(game.teams&&p.team!=null){   // Teamfarbe als Streifen
     rrect(ctx,x+10,y+h-9,w-20,6,3); ctx.fillStyle=TEAMS[p.team].color; ctx.fill();
   }
-  const icon=p.bot?'🤖':(p.conn?(p.mode==='tilt'?'📱':'👆'):'⚠');
+  const icon=p.bot?'🤖':(p.conn?(p.mode==='tilt'?'📱':(p.mode==='joy'?'🕹️':'👆')):'⚠');
   text(icon+' '+cname(seat).toUpperCase(),x+14,y+h/2-2,28,'#10131a','800','left');
   const n=curTarget(), big=n<=5, step=big?24:16, r=big?9:6, startX=x+w-16-(n-1)*step;
   for(let i=0;i<n;i++){
