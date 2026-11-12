@@ -489,8 +489,11 @@ function drawLobby(){
   button(CX+62,650,80,56,'−',()=>removeBot(),{fill:'#3b4261',font:38});
   text('🤖 '+nb+' Bot'+(nb===1?'':'s'),CX+160,652,20,'#fff','800');
   button(CX+258,650,80,56,'+',()=>addBot(),{fill:'#3b4261',font:38});
-  button(CX+160,716,300,50,'Bot-Stärke: '+BOT_LEVELS[botLevel].name,()=>{ botLevel=(botLevel+1)%BOT_LEVELS.length; beep(500,.05,'triangle'); },{fill:'#3b4261',font:21});
-  text(present().length+' / '+MAX_PLAYERS+' Spieler',CX+160,776,18,'#c9d3ee','600');
+  button(CX+160,708,300,44,'Bot-Stärke: '+BOT_LEVELS[botLevel].name,()=>{ botLevel=(botLevel+1)%BOT_LEVELS.length; beep(500,.05,'triangle'); },{fill:'#3b4261',font:20});
+  // Wie viele sind angemeldet?
+  const all=present(), humans=all.filter(q=>!q.bot), online=humans.filter(q=>q.conn).length, lost=humans.length-online;
+  text('👥 '+all.length+' von '+MAX_PLAYERS+' angemeldet',CX+160,758,26,all.length?'#7CFC9A':'#c9d3ee','800');
+  text('📱 '+online+' iPad'+(online===1?'':'s')+'  ·  🤖 '+nb+' Bot'+(nb===1?'':'s')+(lost?'  ·  ⚠ '+lost+' getrennt':''),CX+160,784,17,'#c9d3ee','600');
 }
 
 function drawOverlay(){
