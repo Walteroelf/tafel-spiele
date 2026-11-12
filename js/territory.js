@@ -4,7 +4,7 @@
    Einfach (Standard): Spuren sind ungefährlich, wer "raus" ist, steigt nach kurzer Pause wieder ein.
    Original: Berührt jemand deine Spur, bist du raus; eigene Spur und Wand sind auch tödlich. */
 (function(){
-  const CELL=20, GWc=Math.floor((FX1-FX0)/CELL), GHc=Math.floor((FY1-FY0)/CELL), TOTAL=GWc*GHc;
+  const CELL=10, GWc=Math.floor((FX1-FX0)/CELL), GHc=Math.floor((FY1-FY0)/CELL), TOTAL=GWc*GHc;
   const SPEED=150, TURN=2.8;
   let grid=new Int8Array(TOTAL).fill(-1), trailGrid=new Uint8Array(TOTAL), counts=new Array(MAX_PLAYERS).fill(0);
   let dirty=[], timeLeft=90, playTime=0;
@@ -17,13 +17,78 @@
   const pct=p=>Math.round(counts[p.seat]/TOTAL*100);
   function setOwner(i,id){ if(grid[i]!==id){ grid[i]=id; dirty.push(i); } }
   function recount(){ counts.fill(0); for(let i=0;i<TOTAL;i++) if(grid[i]>=0) counts[grid[i]]++; }
-  function flush(){
-    for(const i of dirty){
-      const gx=i%GWc, gy=(i/GWc)|0, o=grid[i];
-      if(o<0) tx.clearRect(FX0+gx*CELL,FY0+gy*CELL,CELL,CELL);
-      else { tx.fillStyle=COLORS[o][1]; tx.fillRect(FX0+gx*CELL,FY0+gy*CELL,CELL,CELL); }
+  // Flächen werden als geglättete Umrisse gemalt: Aus dem Raster wird mit "Marching Squares" der Umriss jeder Farbe
+  // gewonnen und mit dem Chaikin-Verfahren abgerundet. So gibt es keine Treppenstufen und Ecken mehr.
+  function contourLoops(k){
+    const nb=new Map();
+    const P=(x,y)=>x*8192+y;
+    const link=(a,b)=>{ (nb.get(a)||nb.set(a,[]).get(a)).push(b); (nb.get(b)||nb.set(b,[]).get(b)).push(a); };
+    const v=(ix,iy)=>(ix<1||iy<1||ix>GWc||iy>GHc)?0:(grid[(iy-1)*GWc+(ix-1)]===k?1:0);   // Rand mit 0 aufgefüllt
+    for(let iy=0;iy<=GHc;iy++)for(let ix=0;ix<=GWc;ix++){
+      const code=v(ix,iy)|v(ix+1,iy)<<1|v(ix+1,iy+1)<<2|v(ix,iy+1)<<3;
+      if(code===0||code===15) continue;
+      const T=P(2*ix+1,2*iy), R=P(2*ix+2,2*iy+1), B=P(2*ix+1,2*iy+2), L=P(2*ix,2*iy+1);
+      switch(code){
+        case 1: case 14: link(L,T); break;
+        case 2: case 13: link(T,R); break;
+        case 4: case 11: link(R,B); break;
+        case 8: case 7: link(B,L); break;
+        case 3: case 12: link(L,R); break;
+        case 6: case 9: link(T,B); break;
+        case 5: link(L,T); link(R,B); break;
+        case 10: link(T,R); link(B,L); break;
+      }
     }
+    const seen=new Set(), loops=[];
+    for(const start of nb.keys()){
+      if(seen.has(start)) continue;
+      const pts=[]; let prev=-1, cur=start, guard=0;
+      do{
+        seen.add(cur);
+        pts.push([FX0+((Math.floor(cur/8192))/2-1)*CELL+CELL/2, FY0+((cur%8192)/2-1)*CELL+CELL/2]);
+        const n=nb.get(cur); const next=(n[0]!==prev)?n[0]:n[1];
+        prev=cur; cur=next;
+      }while(cur!==start&&++guard<20000);
+      if(pts.length>=3) loops.push(pts);
+    }
+    return loops;
+  }
+  function chaikin(pts,times){
+    for(let t=0;t<times;t++){
+      const out=[];
+      for(let i=0;i<pts.length;i++){
+        const a=pts[i], b=pts[(i+1)%pts.length];
+        out.push([.75*a[0]+.25*b[0],.75*a[1]+.25*b[1]],[.25*a[0]+.75*b[0],.25*a[1]+.75*b[1]]);
+      }
+      pts=out;
+    }
+    return pts;
+  }
+  function relax(pts,times){   // Eckpunkte mit ihren Nachbarn mitteln: rundet auch mehrzellige Stufen ab
+    for(let t=0;t<times;t++){
+      const n=pts.length, o=new Array(n);
+      for(let i=0;i<n;i++){ const a=pts[(i+n-1)%n], b=pts[i], c=pts[(i+1)%n]; o[i]=[(a[0]+2*b[0]+c[0])/4,(a[1]+2*b[1]+c[1])/4]; }
+      pts=o;
+    }
+    return pts;
+  }
+  function flush(){
+    if(!dirty.length) return;
     dirty=[];
+    tx.clearRect(0,0,W,H);
+    const has=new Array(MAX_PLAYERS).fill(false);
+    for(let i=0;i<TOTAL;i++) if(grid[i]>=0) has[grid[i]]=true;
+    for(let k=0;k<MAX_PLAYERS;k++){
+      if(!has[k]) continue;
+      tx.beginPath();
+      for(const loop of contourLoops(k)){
+        const sm=chaikin(relax(loop,4),2);
+        tx.moveTo(sm[0][0],sm[0][1]);
+        for(let i=1;i<sm.length;i++) tx.lineTo(sm[i][0],sm[i][1]);
+        tx.closePath();
+      }
+      tx.fillStyle=COLORS[k][1]; tx.fill('evenodd');
+    }
   }
   function block(i,r,id){   // Quadrat um Zelle i in Farbe von id
     const gx=i%GWc, gy=(i/GWc)|0;
@@ -42,7 +107,7 @@
   function newCar(p){
     const sp=seatSpawn(p);
     p.car={x:sp.x,y:sp.y,vx:0,vy:0,a:0,dead:false,falling:false,out:false,respT:0,trail:[],cell:0,wp:[],boostT:0,boostCd:0,turboFx:0,turboCd:0};
-    block(cellOf(sp.x,sp.y),2,p.seat);    // 5x5 Startgebiet
+    block(cellOf(sp.x,sp.y),5,p.seat);    // Startgebiet (ca. 110 px)
     place(p,sp.x,sp.y);
   }
   function respawn(p){
@@ -50,7 +115,7 @@
     if(counts[p.seat]>0){
       for(let t=0;t<200;t++){ const i=Math.floor(rand(0,TOTAL)); if(grid[i]===p.seat){ const q=cellCenter(i); place(p,q.x,q.y); return; } }
     }
-    const sp=seatSpawn(p); block(cellOf(sp.x,sp.y),2,p.seat); recount(); place(p,sp.x,sp.y);
+    const sp=seatSpawn(p); block(cellOf(sp.x,sp.y),5,p.seat); recount(); place(p,sp.x,sp.y);
   }
   function kill(p){
     const c=p.car; if(!c||c.dead) return;
@@ -100,7 +165,7 @@
       if(t>0){
         if(t===id+1){
           const k=c.trail.indexOf(idx);
-          if(k>=0&&k<c.trail.length-3){ kill(p); return; }
+          if(k>=0&&k<c.trail.length-8){ kill(p); return; }
         } else { const v=players[t-1]; if(v&&v.car&&!v.car.dead) kill(v); }
       }
     }
@@ -205,16 +270,24 @@
       rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,24); ctx.fillStyle='#e9edf3'; ctx.fill();
       ctx.save(); rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,24); ctx.clip();
       ctx.strokeStyle='rgba(0,0,0,.06)'; ctx.lineWidth=1;
-      for(let x=FX0;x<=FX1;x+=CELL){ ctx.beginPath(); ctx.moveTo(x,FY0); ctx.lineTo(x,FY1); ctx.stroke(); }
-      for(let y=FY0;y<=FY1;y+=CELL){ ctx.beginPath(); ctx.moveTo(FX0,y); ctx.lineTo(FX1,y); ctx.stroke(); }
+      for(let x=FX0;x<=FX1;x+=40){ ctx.beginPath(); ctx.moveTo(x,FY0); ctx.lineTo(x,FY1); ctx.stroke(); }
+      for(let y=FY0;y<=FY1;y+=40){ ctx.beginPath(); ctx.moveTo(FX0,y); ctx.lineTo(FX1,y); ctx.stroke(); }
       ctx.globalAlpha=.78; ctx.drawImage(terr,0,0); ctx.globalAlpha=1;
-      // Spuren
-      ctx.globalAlpha=dangerous()?.95:.5;
+      // Spuren als weiche, runde Linie durch die Zellmitten
+      ctx.globalAlpha=dangerous()?.95:.55; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.lineWidth=CELL*.8;
       for(const p of present()){
         const c=p.car; if(!c||!c.trail.length) continue;
-        ctx.fillStyle=p.color;
-        for(const i of c.trail){ const gx=i%GWc, gy=(i/GWc)|0; ctx.fillRect(FX0+gx*CELL+3,FY0+gy*CELL+3,CELL-6,CELL-6); }
+        ctx.strokeStyle=p.color; ctx.beginPath();
+        let pts=c.trail.map(i=>[FX0+(i%GWc)*CELL+CELL/2,FY0+((i/GWc)|0)*CELL+CELL/2]); pts.push([c.x,c.y]);
+        for(let t=0;t<2&&pts.length>2;t++){   // offene Linie glätten (Anfang und Ende bleiben)
+          const o=[pts[0]];
+          for(let i=0;i<pts.length-1;i++){ const a=pts[i], b=pts[i+1]; o.push([.75*a[0]+.25*b[0],.75*a[1]+.25*b[1]],[.25*a[0]+.75*b[0],.25*a[1]+.75*b[1]]); }
+          o.push(pts[pts.length-1]); pts=o;
+        }
+        pts.forEach((q,k)=>{ if(k) ctx.lineTo(q[0],q[1]); else ctx.moveTo(q[0],q[1]); });
+        ctx.stroke();
       }
+      ctx.lineCap='butt';
       ctx.globalAlpha=1;
       ctx.restore();
       ctx.lineWidth=10; ctx.strokeStyle='#59627d'; rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,24); ctx.stroke();
