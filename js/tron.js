@@ -3,7 +3,34 @@
    Wer eine Wand oder eine Spur berührt, ist raus. TURBO = kurzer Spurt. */
 (function(){
   const GS=4, GW=Math.ceil((FX1-FX0)/GS), GH=Math.ceil((FY1-FY0)/GS);
-  let grid=new Uint8Array(GW*GH), playT=0;
+  let grid=new Uint8Array(GW*GH), playT=0, needRebuild=false;
+
+  // Spuren werden einmal auf zwei Zwischen-Leinwände gemalt (Glow + Kern) und pro Bild nur kopiert.
+  // So wird das Zeichnen nicht langsamer, je länger die Spuren werden.
+  const mkLayer=()=>{ const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d'); x.lineCap='round'; x.lineJoin='round'; return {c,x}; };
+  const glowL=mkLayer(), coreL=mkLayer();
+  const BG=[7,11,24];
+  function soft(hex,k){   // Farbe mit dem Hintergrund mischen (deckend statt transparent, damit sich nichts aufaddiert)
+    const n=parseInt(hex.slice(1),16), r=n>>16&255, g=n>>8&255, b=n&255;
+    return 'rgb('+Math.round(BG[0]+(r-BG[0])*k)+','+Math.round(BG[1]+(g-BG[1])*k)+','+Math.round(BG[2]+(b-BG[2])*k)+')';
+  }
+  function seg(p,x0,y0,x1,y1){
+    glowL.x.strokeStyle=soft(p.color,.3); glowL.x.lineWidth=13; glowL.x.beginPath(); glowL.x.moveTo(x0,y0); glowL.x.lineTo(x1,y1); glowL.x.stroke();
+    coreL.x.strokeStyle=p.color; coreL.x.lineWidth=5; coreL.x.beginPath(); coreL.x.moveTo(x0,y0); coreL.x.lineTo(x1,y1); coreL.x.stroke();
+  }
+  function clearLayers(){ glowL.x.clearRect(0,0,W,H); coreL.x.clearRect(0,0,W,H); }
+  function rebuild(){
+    clearLayers();
+    for(const p of present()){
+      const c=p.car; if(!c||c.dead||!c.trail.length) continue;
+      for(const L of [glowL,coreL]){
+        L.x.strokeStyle=L===glowL?soft(p.color,.3):p.color; L.x.lineWidth=L===glowL?13:5;
+        L.x.beginPath(); L.x.moveTo(c.x0,c.y0);
+        for(let i=0;i<c.trail.length;i+=2) L.x.lineTo(c.trail[i],c.trail[i+1]);
+        L.x.stroke();
+      }
+    }
+  }
 
   const idx=(x,y)=>{
     const gx=Math.floor((x-FX0)/GS), gy=Math.floor((y-FY0)/GS);
@@ -27,9 +54,11 @@
     return {x,y,a,vx:0,vy:0,dead:false,falling:false,deadT:0,trail:[],boostT:0,boostCd:0,
       sx:x-Math.cos(a)*14,sy:y-Math.sin(a)*14,pref:Math.random()<.5?-1:1};
   }
+  function withStart(c){ c.x0=c.px=c.sx; c.y0=c.py=c.sy; return c;
+  }
   function die(p){
     const c=p.car; if(c.dead) return;
-    c.dead=true; c.deadT=0; c.trail=[];
+    c.dead=true; c.deadT=0; c.trail=[]; needRebuild=true;
     clearOwner(p.seat+1);
     sparks(c.x,c.y,36,p.color); sparks(c.x,c.y,12,'#fff');
     shake=Math.max(shake,8); beep(200,.4,'sawtooth',.1,-150);
@@ -54,8 +83,8 @@
     targets:[1,3,5],defTarget:3,
     bot,playT:()=>playT,
     startRound(){
-      grid=new Uint8Array(GW*GH); playT=0;
-      for(const p of present()) p.car=spawn(p);
+      grid=new Uint8Array(GW*GH); playT=0; clearLayers();
+      for(const p of present()) p.car=withStart(spawn(p));
     },
     update(dt,ph){
       const list=inRound();
@@ -78,11 +107,12 @@
           stampLine(c.sx,c.sy,tx,ty,p.seat+1);
           if(Math.hypot(tx-c.sx,ty-c.sy)>=0){
             const n=c.trail.length;
-            if(n<2||Math.hypot(tx-c.trail[n-2],ty-c.trail[n-1])>=6){ c.trail.push(tx,ty); }
+            if(n<2||Math.hypot(tx-c.trail[n-2],ty-c.trail[n-1])>=6){ seg(p,c.px,c.py,tx,ty); c.trail.push(tx,ty); c.px=tx; c.py=ty; }
           }
           c.sx=tx; c.sy=ty;
         }
       }
+      if(needRebuild){ rebuild(); needRebuild=false; }
       if(ph==='play'){
         playT+=dt;
         const act=list.filter(p=>!p.car.dead);
@@ -96,7 +126,7 @@
                   :{winners:[],text:'Alle raus – Unentschieden',color:'#fff'};
         }
         if(list.length===1&&list[0].car.dead&&list[0].car.deadT>1){   // allein üben
-          grid=new Uint8Array(GW*GH); list[0].car=spawn(list[0]);
+          grid=new Uint8Array(GW*GH); clearLayers(); list[0].car=withStart(spawn(list[0]));
         }
       }
     },
@@ -106,23 +136,23 @@
       ctx.strokeStyle='rgba(80,180,255,.10)'; ctx.lineWidth=1;
       for(let x=FX0;x<=FX1;x+=40){ ctx.beginPath(); ctx.moveTo(x,FY0); ctx.lineTo(x,FY1); ctx.stroke(); }
       for(let y=FY0;y<=FY1;y+=40){ ctx.beginPath(); ctx.moveTo(FX0,y); ctx.lineTo(FX1,y); ctx.stroke(); }
-      ctx.save(); ctx.shadowColor='#38bdf8'; ctx.shadowBlur=24; ctx.lineWidth=6; ctx.strokeStyle='#7dd3fc';
-      ctx.strokeRect(FX0,FY0,FX1-FX0,FY1-FY0); ctx.restore();
-      ctx.lineCap='round'; ctx.lineJoin='round';
-      for(const p of present()){
+      // Leuchtender Rand: halbtransparente Linien statt shadowBlur
+      ctx.strokeStyle='#38bdf8'; ctx.globalAlpha=.10;
+      for(const w of [22,14]){ ctx.lineWidth=w; ctx.strokeRect(FX0,FY0,FX1-FX0,FY1-FY0); }
+      ctx.globalAlpha=1; ctx.lineWidth=6; ctx.strokeStyle='#7dd3fc'; ctx.strokeRect(FX0,FY0,FX1-FX0,FY1-FY0);
+      ctx.drawImage(glowL.c,0,0); ctx.drawImage(coreL.c,0,0);
+      ctx.lineCap='round';
+      for(const p of present()){   // letztes Stück bis zum Kopf
         const c=p.car; if(!c||c.dead) continue;
-        const pts=c.trail;
-        ctx.beginPath(); ctx.moveTo(pts.length?pts[0]:c.sx,pts.length?pts[1]:c.sy);
-        for(let i=2;i<pts.length;i+=2) ctx.lineTo(pts[i],pts[i+1]);
-        ctx.lineTo(c.sx,c.sy); ctx.lineTo(c.x,c.y);
-        ctx.strokeStyle=p.color; ctx.globalAlpha=.28; ctx.lineWidth=13; ctx.stroke();
-        ctx.globalAlpha=1; ctx.lineWidth=5; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(c.px,c.py); ctx.lineTo(c.sx,c.sy); ctx.lineTo(c.x,c.y);
+        ctx.strokeStyle=soft(p.color,.3); ctx.lineWidth=13; ctx.stroke();
+        ctx.strokeStyle=p.color; ctx.lineWidth=5; ctx.stroke();
       }
       ctx.lineCap='butt';
       for(const p of present()){
         const c=p.car; if(!c||c.dead) continue;
         ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.a);
-        ctx.shadowColor=p.color; ctx.shadowBlur=c.boostT>0?30:16;
+        ctx.globalAlpha=.3; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(0,0,c.boostT>0?26:17,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
         ctx.fillStyle='#fff'; ctx.beginPath(); ctx.moveTo(14,0); ctx.lineTo(-9,-9); ctx.lineTo(-5,0); ctx.lineTo(-9,9); ctx.closePath(); ctx.fill();
         ctx.lineWidth=3; ctx.strokeStyle=p.color; ctx.stroke();
         ctx.restore();

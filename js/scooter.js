@@ -67,6 +67,33 @@
       t:(tgt&&best<260&&Math.abs(diff)<.12&&dc<curR*.6&&Math.random()<.03)?1:0};
   }
 
+  // Hintergrund und Boden werden nur bei Änderung neu gemalt und sonst als Bild kopiert (spart viel Rechenzeit).
+  const FLOOR=R0*2+40;
+  let bgCv=null, floorCv=null, floorKey='';
+  function layer(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+  function getBg(){
+    if(!bgCv){
+      bgCv=layer(W,H); const x=bgCv.getContext('2d');
+      const bg=x.createRadialGradient(CX,CY,100,CX,CY,900); bg.addColorStop(0,'#14192b'); bg.addColorStop(1,'#05070d');
+      x.fillStyle=bg; x.fillRect(0,0,W,H);
+    }
+    return bgCv;
+  }
+  function getFloor(eis){
+    const key=eis+'|'+Math.round(curR/2);
+    if(!floorCv){ floorCv=layer(FLOOR,FLOOR); floorKey=''; }
+    if(key!==floorKey){
+      floorKey=key; const x=floorCv.getContext('2d'), c=FLOOR/2;
+      x.clearRect(0,0,FLOOR,FLOOR);
+      const gr=x.createRadialGradient(c,c-60,40,c,c,curR);
+      if(eis){ gr.addColorStop(0,'#b9d9ee'); gr.addColorStop(1,'#6e9bbd'); } else { gr.addColorStop(0,'#4a5470'); gr.addColorStop(1,'#272e42'); }
+      x.beginPath(); x.arc(c,c,curR,0,Math.PI*2); x.fillStyle=gr; x.fill();
+      x.strokeStyle=eis?'rgba(255,255,255,.35)':'rgba(255,255,255,.10)'; x.lineWidth=2;
+      for(const f of [.66,.33]){ x.beginPath(); x.arc(c,c,curR*f,0,Math.PI*2); x.stroke(); }
+    }
+    return floorCv;
+  }
+
   const g={
     id:'scooter',name:'Scooter',icon:'🚗',
     desc:'Rausdrängen! Wer als Letzter in der Arena bleibt, gewinnt.',
@@ -116,20 +143,15 @@
     },
     draw(){
       const eis=opt('boden')==='eis';
-      const bg=ctx.createRadialGradient(CX,CY,100,CX,CY,900);
-      bg.addColorStop(0,'#14192b'); bg.addColorStop(1,'#05070d');
-      ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+      ctx.drawImage(getBg(),0,0,W,H);
       if(curR<R0-1){
         ctx.save(); ctx.setLineDash([10,14]); ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.lineWidth=3;
         ctx.beginPath(); ctx.arc(CX,CY,R0,0,Math.PI*2); ctx.stroke(); ctx.restore();
       }
-      ctx.save(); ctx.shadowColor='rgba(255,70,50,.55)'; ctx.shadowBlur=38;
-      ctx.beginPath(); ctx.arc(CX,CY,curR,0,Math.PI*2); ctx.fillStyle='#000'; ctx.fill(); ctx.restore();
-      const gr=ctx.createRadialGradient(CX,CY-60,40,CX,CY,curR);
-      if(eis){ gr.addColorStop(0,'#b9d9ee'); gr.addColorStop(1,'#6e9bbd'); } else { gr.addColorStop(0,'#4a5470'); gr.addColorStop(1,'#272e42'); }
-      ctx.beginPath(); ctx.arc(CX,CY,curR,0,Math.PI*2); ctx.fillStyle=gr; ctx.fill();
-      ctx.strokeStyle=eis?'rgba(255,255,255,.35)':'rgba(255,255,255,.10)'; ctx.lineWidth=2;
-      for(const f of [.66,.33]){ ctx.beginPath(); ctx.arc(CX,CY,curR*f,0,Math.PI*2); ctx.stroke(); }
+      // Roter Schein am Rand: dünne Ringe statt shadowBlur/Vollkreisen (auf schwachen Geräten viel schneller)
+      ctx.lineWidth=10;
+      for(let i=1;i<=3;i++){ ctx.strokeStyle='rgba(255,70,50,'+(.22-i*.05)+')'; ctx.beginPath(); ctx.arc(CX,CY,curR+i*10,0,Math.PI*2); ctx.stroke(); }
+      ctx.drawImage(getFloor(eis),CX-FLOOR/2,CY-FLOOR/2);
       // Löcher
       for(const c of cells){
         const R=RINGS[c.ring], a0=c.sec/R.n*Math.PI*2, a1=(c.sec+1)/R.n*Math.PI*2;

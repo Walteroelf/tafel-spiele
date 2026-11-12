@@ -49,3 +49,9 @@ Lokal testen: `python3 -m http.server 8765` im Ordner starten, dann `http://loca
 - Die iPads schicken ihre Eingaben per WebRTC direkt an die Tafel (PeerJS). Der öffentliche PeerJS-Server vermittelt nur den Verbindungsaufbau.
 - Es werden keine Namen und keine Accounts verwendet, nur Farben.
 - Blockiert das Schulnetz Verbindungen zwischen Geräten, hilft oft ein Hotspot oder eine Freigabe von `0.peerjs.com` (Port 443) und WebRTC/UDP.
+
+## Wenn die Tafel langsam ist
+- `board.html?debug=1` öffnen (oder auf der Tastatur `F` drücken): oben erscheint eine Anzeige mit Bildern pro Sekunde und Auflösung.
+- Die Tafel senkt bei dauerhaft niedriger Bildrate automatisch Auflösung und Effekte („Sparmodus“).
+- Mit `board.html?cap=1280` lässt sich die maximale Breite der Zeichenfläche von Hand begrenzen (Standard 1920).
+- Hilft nichts: Browser-Tab oder Tafel-App einmal komplett schließen und neu öffnen, damit die Grafikbeschleunigung neu startet.

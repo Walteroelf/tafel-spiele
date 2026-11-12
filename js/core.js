@@ -36,17 +36,22 @@ function angDiff(a,b){let d=a-b;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+
 function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 
 // ---------- Canvas ----------
-const cv=document.getElementById('c'), ctx=cv.getContext('2d');
+const cv=document.getElementById('c'); let ctx=cv.getContext('2d');
 let scale=1,offX=0,offY=0;
+const QS=new URLSearchParams(location.search);
+let capW=Math.max(640,+QS.get('cap')||1920);      // maximale Breite der Zeichenfläche in Pixeln (4K-Tafel wird auf Full-HD begrenzt)
+let lowFx=false, showFps=QS.has('debug'), ftAvg=16, fpsNote='';
 function resize(){
   // Größe aus dem tatsächlich sichtbaren Bereich nehmen (iPad-Safari: 100vh ist höher als der sichtbare Teil)
-  const d=devicePixelRatio||1, r=cv.getBoundingClientRect();
+  let d=devicePixelRatio||1; const r=cv.getBoundingClientRect();
+  if(r.width*d>capW) d=capW/r.width;
   cv.width=Math.max(2,Math.round(r.width*d)); cv.height=Math.max(2,Math.round(r.height*d));
   scale=Math.min(cv.width/W,cv.height/H);
   offX=(cv.width-W*scale)/2; offY=(cv.height-H*scale)/2;
 }
 addEventListener('resize',resize); addEventListener('orientationchange',()=>setTimeout(resize,200));
 if(window.visualViewport) visualViewport.addEventListener('resize',resize);
+if(window.ResizeObserver) new ResizeObserver(()=>resize()).observe(cv);   // auch wenn die Fläche erst später ihre Größe bekommt
 resize();
 
 // ---------- Ton ----------
@@ -251,6 +256,7 @@ function keepInRect(c,r,x0,y0,x1,y1,e){
 
 // ---------- Effekte ----------
 function confetti(x,y,n,color){
+  if(lowFx) n=Math.ceil(n/3);
   for(let i=0;i<n;i++){
     const a=rand(0,Math.PI*2), v=rand(120,520);
     particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-200,life:rand(1.2,2.4),g:500,
@@ -258,6 +264,7 @@ function confetti(x,y,n,color){
   }
 }
 function sparks(x,y,n,color){
+  if(lowFx) n=Math.ceil(n/2);
   for(let i=0;i<n;i++){
     const a=rand(0,Math.PI*2), v=rand(80,320);
     particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:rand(.2,.5),g:0,c:color||'#ffd24a',s:4,rot:0,spark:true});
@@ -534,7 +541,7 @@ function draw(){
   ctx.beginPath(); ctx.rect(0,0,W,H); ctx.clip();
   if(phase==='lobby') drawLobbyBackdrop();
   else {
-    if(shake>0) ctx.translate(rand(-shake,shake),rand(-shake,shake));
+    if(shake>0&&!lowFx) ctx.translate(rand(-shake,shake),rand(-shake,shake));
     game.draw();
     for(const q of particles){
       ctx.globalAlpha=clamp(q.life*2,0,1); ctx.fillStyle=q.c;
@@ -547,6 +554,11 @@ function draw(){
   for(let i=0;i<MAX_PLAYERS;i++) drawBadge(i,players[i]);
   if(phase==='lobby') drawLobby();
   drawOverlay();
+  if(showFps){
+    ctx.save(); rrect(ctx,CX-250,4,500,30,8); ctx.fillStyle='rgba(0,0,0,.7)'; ctx.fill();
+    text(Math.round(1000/ftAvg)+' FPS · '+cv.width+'×'+cv.height+(lowFx?' · Sparmodus':'')+fpsNote,CX,19,18,'#7CFC9A','700');
+    ctx.restore();
+  }
 }
 
 // ---------- Eingabe an der Tafel (nur Tippen, eine Berührung genügt) ----------
@@ -589,13 +601,25 @@ cv.addEventListener('pointercancel',upCancel);
 addEventListener('keydown',e=>{
   if(e.key==='Enter'&&(phase==='lobby'||phase==='final')){audioInit();startMatch();}
   if(e.key==='b') addBot();
+  if(e.key==='f') showFps=!showFps;
 });
 
 // ---------- Start ----------
-let lastT=performance.now();
+let lastT=performance.now(), slowT=0, degradeCool=0;
 function frame(t){
-  const dt=Math.min(.05,(t-lastT)/1000); lastT=t;
-  update(dt); draw();
+  const real=Math.max(0,(t-lastT)/1000); lastT=t;
+  // Spielzeit läuft in Echtzeit: Ist die Tafel langsam, wird in mehreren kleinen Schritten nachgeholt,
+  // statt das Spiel in Zeitlupe laufen zu lassen (früher: Countdown "30 Sekunden" bei 2 Bildern pro Sekunde).
+  const el=Math.min(1,real), steps=Math.max(1,Math.ceil(el/(1/30)));   // bis 1 s pro Bild nachholen
+  for(let i=0;i<steps;i++) update(el/steps);
+  draw();
+  ftAvg+=(Math.min(real,.5)*1000-ftAvg)*.08;
+  // Automatischer Sparmodus: dauerhaft unter ~22 Bildern pro Sekunde -> Auflösung und Effekte senken
+  degradeCool-=real;
+  if(ftAvg>45&&degradeCool<=0&&capW>800){
+    capW=capW>1400?1280:(capW>1000?960:800); lowFx=true; degradeCool=4; ftAvg=25; resize();
+    fpsNote=' · Auflösung gesenkt';
+  }
   requestAnimationFrame(frame);
 }
 function startApp(){
