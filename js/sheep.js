@@ -7,18 +7,22 @@
   let sheep=[], pens=[], timeLeft=90, playTime=0, total=12;
 
   const coopMode=()=>opt('modus')==='gemeinsam';
+  // Wie scheu die Schafe sind: ruhig (leicht, Standard), normal, flink (schwer)
+  const LV={ruhig:{range:120,flee:140,max:160,pull:1,pen:1.25},normal:{range:160,flee:210,max:230,pull:.5,pen:1.1},flink:{range:190,flee:300,max:280,pull:0,pen:1}};
+  const lv=()=>LV[opt('tempo')]||LV.ruhig;
   function inPen(pen,x,y){
     return pen.r?Math.hypot(x-pen.x,y-pen.y)<pen.r-6:(Math.abs(x-pen.x)<pen.hw-6&&Math.abs(y-pen.y)<pen.hh-6);
   }
   function buildPens(){
     pens=[];
-    if(coopMode()){ pens.push({x:CX,y:CY,r:130,owner:-1}); return; }
+    const K=lv().pen;
+    if(coopMode()){ pens.push({x:CX,y:CY,r:130*K,owner:-1}); return; }
     for(const p of present()){
       const s=SEATS[p.seat], rot=s.rot, nx=Math.sin(rot), ny=-Math.cos(rot);
       const ex=s.side==='links'?FX0:(s.side==='rechts'?FX1:clamp(s.x*W,FX0+130,FX1-130));
       const ey=s.side==='oben'?FY0:(s.side==='unten'?FY1:clamp(s.y*H,FY0+130,FY1-130));
       const horiz=s.side==='oben'||s.side==='unten';
-      pens.push({x:ex+nx*62,y:ey+ny*62,hw:horiz?118:62,hh:horiz?62:118,owner:p.seat,color:p.color});
+      pens.push({x:ex+nx*62*K,y:ey+ny*62*K,hw:(horiz?118:62)*K,hh:(horiz?62:118)*K,owner:p.seat,color:p.color});
     }
   }
   function spawnCar(p){
@@ -63,13 +67,13 @@
     coop:()=>coopMode(),
     options:[
       {key:'modus',label:'Modus',values:[['gemeinsam','gemeinsam'],['einzeln','jeder für sich']],def:'gemeinsam'},
-      {key:'schafe',label:'Schafe',values:[['8','8'],['12','12'],['16','16']],def:'12'},
-      {key:'zeit',label:'Zeit',values:[['60','60 s'],['90','90 s'],['120','120 s']],def:'90'},
+      {key:'tempo',label:'Schafe sind',values:[['ruhig','ruhig (leicht)'],['normal','normal'],['flink','flink (schwer)']],def:'ruhig'},
+      {key:'schafe',label:'Anzahl',values:[['8','8'],['12','12'],['16','16']],def:'12'},
     ],
     bot,playT:()=>playTime,
     hudExtra:p=>coopMode()?'🐑 '+lockedCount()+'/'+total:'🐑 '+ownCount(p.seat),
     startRound(){
-      playTime=0; timeLeft=+opt('zeit'); total=+opt('schafe');
+      playTime=0; timeLeft=120; total=+opt('schafe');
       buildPens(); spawnSheep();
       for(const p of present()) p.car=spawnCar(p);
     },
@@ -90,16 +94,22 @@
         s.wt-=dt;
         if(s.wt<=0){ s.wa=rand(0,6.28); s.ws=Math.random()<.4?0:rand(10,40); s.wt=rand(1,3); }
         let dx=Math.cos(s.wa)*s.ws, dy=Math.sin(s.wa)*s.ws;
+        const L=lv();
         for(const p of list){
           const c=p.car, ex=s.x-c.x, ey=s.y-c.y, d=Math.hypot(ex,ey);
-          if(d<160&&d>.1){ const k=Math.pow(1-d/160,1.2)*220; dx+=ex/d*k; dy+=ey/d*k; }
+          if(d<L.range&&d>.1){ const k=Math.pow(1-d/L.range,1.2)*L.flee; dx+=ex/d*k; dy+=ey/d*k; }
         }
         // Nicht in Ecken und an Wänden festsitzen: sanft zur Mitte zurückdriften
         const m=100;
         if(s.x<FX0+m) dx+=(FX0+m-s.x)*1.6; if(s.x>FX1-m) dx-=(s.x-(FX1-m))*1.6;
         if(s.y<FY0+m) dy+=(FY0+m-s.y)*1.6; if(s.y>FY1-m) dy-=(s.y-(FY1-m))*1.6;
+        if(L.pull>0){   // Schafe nahe am Gehege werden sanft hineingezogen
+          let near=null,nd=1e9;
+          for(const pn of pens){ const d=Math.hypot(pn.x-s.x,pn.y-s.y), reach=(pn.r||Math.max(pn.hw,pn.hh))*1.9; if(d<reach&&d<nd){nd=d;near=pn;} }
+          if(near&&nd>1){ dx+=(near.x-s.x)/nd*70*L.pull; dy+=(near.y-s.y)/nd*70*L.pull; }
+        }
         const k=Math.min(1,dt*4); s.vx+=(dx-s.vx)*k; s.vy+=(dy-s.vy)*k;
-        const sp=Math.hypot(s.vx,s.vy); if(sp>280){ s.vx*=280/sp; s.vy*=280/sp; }
+        const sp=Math.hypot(s.vx,s.vy); if(sp>L.max){ s.vx*=L.max/sp; s.vy*=L.max/sp; }
         s.x+=s.vx*dt; s.y+=s.vy*dt;
         if(sp>8) s.face=Math.atan2(s.vy,s.vx);
         keepInRect(s,SR,FX0,FY0,FX1,FY1,.3);
