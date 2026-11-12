@@ -625,16 +625,25 @@ function fire(b){
   lastFire=now; lastKey=b.key; pressed=b.key; pressUntil=now+200;
   b.fn();
 }
+let downKey=null, consumed=false;
 cv.addEventListener('pointerdown',e=>{
   e.preventDefault();
   audioInit();
   try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').catch(()=>{}); }catch(err){}
   const w=worldPos(e), b=hitButton(w.x,w.y);
-  if(b){ pressed=b.key; pressUntil=performance.now()+200; if(!b.up) fire(b); }
+  downKey=b?b.key:'';           // merken, wo der Finger aufgesetzt wurde
+  consumed=false;
+  if(b){
+    pressed=b.key; pressUntil=performance.now()+200;
+    if(!b.up){ consumed=true; fire(b); }   // sofort auslösen; das Loslassen danach zählt nicht mehr
+  }
 });
 function upCancel(e){
-  const w=worldPos(e), b=hitButton(w.x,w.y);
-  if(b) fire(b);                       // greift, falls das "Down" verloren ging
+  // Wurde der Tipp schon beim Aufsetzen verarbeitet, darf das Loslassen nichts mehr auslösen.
+  // (Sonst trifft es nach einem Bildwechsel einen anderen Knopf an gleicher Stelle, z.B. START nach "Spielwahl".)
+  if(consumed){ consumed=false; downKey=null; return; }
+  const w=worldPos(e), b=hitButton(w.x,w.y), dk=downKey; downKey=null;
+  if(b&&(dk===null||dk===b.key)) fire(b);   // greift z.B. beim Vollbild-Knopf oder wenn das "Down" verloren ging
 }
 cv.addEventListener('pointerup',upCancel);
 cv.addEventListener('pointercancel',upCancel);
