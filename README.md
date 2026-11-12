@@ -15,13 +15,14 @@ Gespielt wird mit 1 bis 8 Personen, dazu kommen optional Bots.
 | 🎨 Farbe | Den Boden in der eigenen Farbe anmalen, die größte Fläche gewinnt | Dauer 45/60/90 s |
 | 🐑 Schafe | Schafe ins Gehege treiben, gemeinsam oder jeder für sich | Modus, Schafe 8/12/16, Zeit 60/90/120 s |
 | 🚒 Feuerwehr | Gemeinsam Brände löschen (kooperativ) | Dauer 60/90/120 s, Schwierigkeit |
+| 🗺️ Gebiet | Paper.io-Stil: aus dem eigenen Gebiet heraus und zurück, die eingeschlossene Fläche wird dein Gebiet | Spuren: sicher (einfach, Standard) oder gefährlich (Original). Wenn raus: Wiedereinstieg (Standard) oder Rausfliegen. Dauer 60/90/120 s |
 
 ## Dateien
 - `index.html` – Startseite (Tafel / iPad)
 - `board.html` – läuft auf der Tafel: Spielwahl, QR-Code, Spiel
 - `play.html` – läuft auf dem iPad: Controller
 - `js/core.js` – Verbindung, Lobby, Runden, Anzeige an den Rändern
-- `js/scooter.js`, `js/ballgames.js` (Fußball + Hockey), `js/tron.js`, `js/coins.js`, `js/pong.js`, `js/paint.js`, `js/sheep.js`, `js/fire.js` – die Spiele
+- `js/scooter.js`, `js/ballgames.js` (Fußball + Hockey), `js/tron.js`, `js/coins.js`, `js/pong.js`, `js/paint.js`, `js/sheep.js`, `js/fire.js`, `js/territory.js` – die Spiele
 
 ## Spielablauf
 1. Auf der Tafel `board.html` öffnen. Dort stehen ein QR-Code und ein 4-stelliger Code.
