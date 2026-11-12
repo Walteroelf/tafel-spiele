@@ -57,6 +57,7 @@
   body.nogas #col,body.joy #col{flex:1}
   body.nogas #turbo,body.joy #turbo{flex:1}
   body.joy #knobTrack,body.joy #knob{display:none}
+  body.nopedals #right{display:none}
   #joyBase{position:absolute;width:200px;height:200px;border-radius:50%;border:6px solid var(--c);background:rgba(255,255,255,.06);
     display:none;pointer-events:none}
   #joyKnob{position:absolute;left:60px;top:60px;width:80px;height:80px;border-radius:50%;background:var(--c);border:4px solid #fff;
@@ -174,6 +175,8 @@ function render(){
     else if(st.phase==='roundEnd') b=(st.won?'🎉 Gewonnen! ':'')+(st.winnerName||'');
     $('banner').textContent=b;
     document.body.classList.toggle('nogas',!!st.noGas);
+    document.body.classList.toggle('nopedals',!!st.noPedals);
+    $('turbo').textContent=st.turboLabel||'TURBO';
   }
 }
 
@@ -272,7 +275,7 @@ function hold(el,setter){
 }
 hold($('gas'),v=>gasOn=v);
 hold($('rev'),v=>revOn=v);
-hold($('turbo'),v=>{ turboOn=v; if(v&&turboCool<=0){ turboCool=3; $('turbo').classList.add('cool'); } });
+hold($('turbo'),v=>{ turboOn=v; if(v&&turboCool<=0&&!st.turboHold){ turboCool=3; $('turbo').classList.add('cool'); } });
 setInterval(()=>{ if(turboCool>0){ turboCool-=.1; if(turboCool<=0) $('turbo').classList.remove('cool'); } },100);
 
 // ---------- Eingabe: Neigung ----------

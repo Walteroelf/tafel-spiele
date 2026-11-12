@@ -11,13 +11,17 @@ Gespielt wird mit 1 bis 8 Personen, dazu kommen optional Bots.
 | 🏒 Hockey | Air-Hockey, jeder bleibt in seiner Hälfte | Tore bis 3/5/7 |
 | 🏍️ Lichtspur | Tron: Wände und Spuren sind tödlich | Siege bis 1/3/5 |
 | 🪙 Münzen | Zeit läuft, 💎 zählt dreifach | Dauer 45/60/90 s |
+| 🏓 4er-Pong | Jede Tafelseite ist ein Tor mit Schläger, wer den Ball durchlässt, verliert ein Leben | Leben 3/5/7 |
+| 🎨 Farbe | Den Boden in der eigenen Farbe anmalen, die größte Fläche gewinnt | Dauer 45/60/90 s |
+| 🐑 Schafe | Schafe ins Gehege treiben, gemeinsam oder jeder für sich | Modus, Schafe 8/12/16, Zeit 60/90/120 s |
+| 🚒 Feuerwehr | Gemeinsam Brände löschen (kooperativ) | Dauer 60/90/120 s, Schwierigkeit |
 
 ## Dateien
 - `index.html` – Startseite (Tafel / iPad)
 - `board.html` – läuft auf der Tafel: Spielwahl, QR-Code, Spiel
 - `play.html` – läuft auf dem iPad: Controller
 - `js/core.js` – Verbindung, Lobby, Runden, Anzeige an den Rändern
-- `js/scooter.js`, `js/ballgames.js` (Fußball + Hockey), `js/tron.js`, `js/coins.js` – die Spiele
+- `js/scooter.js`, `js/ballgames.js` (Fußball + Hockey), `js/tron.js`, `js/coins.js`, `js/pong.js`, `js/paint.js`, `js/sheep.js`, `js/fire.js` – die Spiele
 
 ## Spielablauf
 1. Auf der Tafel `board.html` öffnen. Dort stehen ein QR-Code und ein 4-stelliger Code.
@@ -33,6 +37,8 @@ Gespielt wird mit 1 bis 8 Personen, dazu kommen optional Bots.
 - **Joystick:** Finger links auf den Bildschirm legen und dorthin schieben, wohin das Auto fahren soll. Oben zeigt immer zur Tafelmitte, egal an welcher Seite man steht. Das Gas ist automatisch, TURBO bleibt als Knopf.
 - **Schieber (Touch):** links Finger ziehen zum Lenken, rechts GAS, TURBO und RÜCK.
 - Bei der Lichtspur gibt es nur Lenken und TURBO (Spurt).
+- Bei 4er-Pong gibt es nur links/rechts (Neigung, Joystick oder Schieber), keine Knöpfe.
+- Bei der Feuerwehr heißt der Knopf 💧 WASSER (gedrückt halten). Der Tank wird in der Mitte (Hydrant) aufgefüllt.
 
 ## Neues Spiel hinzufügen
 Datei `js/meinspiel.js` anlegen, mit `GAMES.push({...})` anmelden und in `board.html` einbinden.
