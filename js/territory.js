@@ -1,8 +1,8 @@
 'use strict';
 /* Gebiet erobern (Paper.io-Stil): Fahre aus deinem Gebiet heraus und kehre zurück –
    die Fläche, die du dabei einschließt, gehört dir. Wer am Ende am meisten hat, gewinnt.
-   Einfach (Standard): Spuren sind ungefährlich, wer "raus" ist, steigt nach kurzer Pause wieder ein.
-   Original: Berührt jemand deine Spur, bist du raus; eigene Spur und Wand sind auch tödlich. */
+   Normal (Standard): Berührt jemand deine Spur, bist du raus; eigene Spur und Wand sind auch tödlich.
+   Leicht: Spuren sind ungefährlich. Wer "raus" ist, steigt je nach Einstellung nach kurzer Pause wieder ein. */
 (function(){
   const CELL=10, GWc=Math.floor((FX1-FX0)/CELL), GHc=Math.floor((FY1-FY0)/CELL), TOTAL=GWc*GHc;
   const SPEED=150, TURN=2.8;
@@ -230,7 +230,7 @@
     hint:'Raus aus deinem Gebiet und wieder zurück: Die Fläche dazwischen wird deine!',
     targets:[1,3,5],defTarget:3,
     options:[
-      {key:'spur',label:'Spuren',values:[['sicher','sicher (einfach)'],['gefaehrlich','gefährlich (Original)']],def:'sicher'},
+      {key:'spur',label:'Spuren',values:[['sicher','sicher (leicht)'],['gefaehrlich','gefährlich (normal)']],def:'gefaehrlich'},
       {key:'raus',label:'Wenn raus',values:[['wieder','Wiedereinstieg'],['raus','Rausfliegen']],def:'wieder'},
       {key:'dauer',label:'Dauer',values:[['60','60 s'],['90','90 s'],['120','120 s']],def:'90'},
     ],
