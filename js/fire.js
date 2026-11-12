@@ -80,7 +80,7 @@
         const n=Math.floor(c.sprayAcc); c.sprayAcc-=n;
         for(let k=0;k<n;k++){
           const sp=rand(-.12,.12), a=c.a+sp, v=440+rand(-40,40);
-          water.push({x:c.x+Math.cos(c.a)*26,y:c.y+Math.sin(c.a)*26,vx:Math.cos(a)*v+c.vx*.5,vy:Math.sin(a)*v+c.vy*.5,life:.45,p});
+          water.push({x:c.x+Math.cos(c.a)*(CAR_R+4),y:c.y+Math.sin(c.a)*(CAR_R+4),vx:Math.cos(a)*v+c.vx*.5,vy:Math.sin(a)*v+c.vy*.5,life:.45,p});
         }
       }
       for(const w of water){
@@ -148,8 +148,8 @@
       // Tank-Balken am Auto
       for(const p of present()){
         const c=p.car; if(!c) continue;
-        ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillRect(c.x-22,c.y+30,44,6);
-        ctx.fillStyle=c.tank<20?'#ff6b5a':'#4aa3ff'; ctx.fillRect(c.x-22,c.y+30,44*c.tank/100,6);
+        ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillRect(c.x-22,c.y+CAR_R+8,44,6);
+        ctx.fillStyle=c.tank<20?'#ff6b5a':'#4aa3ff'; ctx.fillRect(c.x-22,c.y+CAR_R+8,44*c.tank/100,6);
       }
       text('🔥 '+fires.length+' / '+(lv().max+1)+'     ⏱ '+(spawning?fmt(timeLeft):'Letzte Brände!'),CX,FY0+44,38,timeLeft<=10&&spawning?'#ff6b5a':'#fff','900');
     },

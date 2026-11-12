@@ -27,7 +27,7 @@ Gespielt wird mit 1 bis 8 Personen, dazu kommen optional Bots.
 ## Spielablauf
 1. Auf der Tafel `board.html` öffnen. Dort stehen ein QR-Code und ein 4-stelliger Code.
 2. Auf dem iPad den QR-Code scannen oder `play.html` öffnen und den Code eintippen. Danach „Bereit“ tippen.
-3. Auf der Tafel Spiel und Optionen wählen, bei Bedarf Bots (− / +) und Bot-Stärke (leicht, mittel, schwer; Standard leicht) einstellen und START tippen. Start und Neustart gibt es nur an der Tafel.
+3. Auf der Tafel Spiel und Optionen wählen, mit „Autos: klein/normal/groß/riesig“ die Fahrzeuggröße einstellen (gilt für alle Spiele mit Autos; bei Lichtspur, Pong und Gebiet bleibt das Spielprinzip gleich), bei Bedarf Bots (− / +) und Bot-Stärke (leicht, mittel, schwer; Standard leicht) einstellen und START tippen. Start und Neustart gibt es nur an der Tafel.
 4. Teamspiele (Fußball, Hockey): Spieler werden abwechselnd auf Links und Rechts verteilt.
 5. Oben rechts gibt es einen Vollbild-Knopf (Symbol mit vier Ecken): einmal tippen für Vollbild, nochmal für normal. Auf dem iPad geht echtes Vollbild zusätzlich über Teilen → „Zum Home-Bildschirm“.
 6. Mit dem ⌂-Knopf oben links (zweimal tippen) geht es zurück zur Spielwahl.

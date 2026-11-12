@@ -5,6 +5,7 @@
   function make(cfg){
     let ball={x:CX,y:CY,vx:0,vy:0,m:1,r:cfg.ballR}, playTime=0;
     const gh=cfg.goalH;
+    const R=()=>cfg.carR*carScale;   // Autoradius inkl. Größen-Einstellung
 
     const teamScore=t=>present().filter(p=>p.team===t).reduce((m,p)=>Math.max(m,p.score),0);
     const teamPlayers=t=>present().filter(p=>p.team===t);
@@ -39,19 +40,19 @@
       for(const p of list){
         const c=p.car;
         if(ph!=='countdown') drive(c,inputOf(p),dt,cfg.carP);
-        keepInRect(c,cfg.carR,FX0,FY0,FX1,FY1,.4);
+        keepInRect(c,R(),FX0,FY0,FX1,FY1,.4);
         if(cfg.halves){
-          if(p.team===0&&c.x>CX-cfg.carR){c.x=CX-cfg.carR;c.vx=Math.min(c.vx,0);}
-          if(p.team===1&&c.x<CX+cfg.carR){c.x=CX+cfg.carR;c.vx=Math.max(c.vx,0);}
+          if(p.team===0&&c.x>CX-R()){c.x=CX-R();c.vx=Math.min(c.vx,0);}
+          if(p.team===1&&c.x<CX+R()){c.x=CX+R();c.vx=Math.max(c.vx,0);}
         }
       }
       if(ph==='countdown') return;
       for(let i=0;i<list.length;i++)for(let j=i+1;j<list.length;j++){
-        const a=list[i].car,b=list[j].car, v=collideCircles(a,b,cfg.carR,cfg.carR,.5);
+        const a=list[i].car,b=list[j].car, v=collideCircles(a,b,R(),R(),.5);
         if(v) impactFx((a.x+b.x)/2,(a.y+b.y)/2,v);
       }
       for(const p of list){
-        const v=collideCircles(p.car,ball,cfg.carR,ball.r,cfg.ballE);
+        const v=collideCircles(p.car,ball,R(),ball.r,cfg.ballE);
         if(v>40){ if(bumpCd<=0){beep(cfg.kickHz,.08,'triangle',.12,-40);bumpCd=.08;} sparks(ball.x,ball.y,Math.min(8,Math.floor(v/50)),'#fff'); }
       }
       // Ball bewegen
@@ -142,7 +143,7 @@
     }
     function draw(){
       drawField();
-      const k=cfg.carR/CAR_R;
+      const k=cfg.carR/CAR_BASE;
       for(const p of present()) drawCar(p,k);
       drawBall();
       // Spielstand

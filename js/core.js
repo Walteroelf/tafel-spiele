@@ -8,7 +8,12 @@
 
 // ---------- Einstellungen ----------
 const MAX_PLAYERS = 8;
-const W = 1600, H = 900, CX = W/2, CY = H/2, CAR_R = 22;
+const W = 1600, H = 900, CX = W/2, CY = H/2;
+const CAR_BASE = 22;                 // Grundgröße der Autos
+let CAR_R = CAR_BASE;                // aktueller Radius (wird von der Größen-Einstellung verändert)
+const CAR_SCALES = [['klein',.8],['normal',1],['groß',1.35],['riesig',1.7]];
+let carScaleIdx = 1, carScale = 1;
+function cycleCarScale(){ carScaleIdx=(carScaleIdx+1)%CAR_SCALES.length; carScale=CAR_SCALES[carScaleIdx][1]; CAR_R=CAR_BASE*carScale; }
 const FX0 = 110, FX1 = 1490, FY0 = 90, FY1 = 810;   // Spielfeld-Rechteck (Ballspiele, Tron, Münzen)
 const ID_PREFIX = 'tafel-spiele-vb-';
 
@@ -400,7 +405,7 @@ function text(t,x,y,size,color,weight,align){
 // Auto zeichnen (Scooter, Ballspiele, Münzjagd). k = Größenfaktor
 function drawCar(p,k){
   const c=p.car; if(!c||c.dead) return;
-  k=k||1;
+  k=(k||1)*carScale;
   const sc=(c.falling?Math.max(0,1-c.fall):1)*k;
   ctx.save();
   ctx.translate(c.x,c.y); ctx.rotate(c.a); ctx.scale(sc,sc);
@@ -410,9 +415,9 @@ function drawCar(p,k){
     ctx.fillStyle='#fff2a8'; ctx.beginPath(); ctx.moveTo(-22,-4); ctx.lineTo(-22-22*(c.turboFx/.4+.3),0); ctx.lineTo(-22,4); ctx.fill();
   }
   if(game.teams&&p.team!=null){
-    ctx.beginPath(); ctx.arc(0,0,CAR_R+5,0,Math.PI*2); ctx.lineWidth=5; ctx.strokeStyle=TEAMS[p.team].color; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,CAR_BASE+5,0,Math.PI*2); ctx.lineWidth=5; ctx.strokeStyle=TEAMS[p.team].color; ctx.stroke();
   }
-  ctx.beginPath(); ctx.arc(0,0,CAR_R,0,Math.PI*2); ctx.fillStyle='#20232c'; ctx.fill();
+  ctx.beginPath(); ctx.arc(0,0,CAR_BASE,0,Math.PI*2); ctx.fillStyle='#20232c'; ctx.fill();
   ctx.lineWidth=4; ctx.strokeStyle='#0c0d12'; ctx.stroke();
   rrect(ctx,-17,-14,34,28,9); ctx.fillStyle=p.color; ctx.fill();
   ctx.lineWidth=2; ctx.strokeStyle='rgba(0,0,0,.45)'; ctx.stroke();
@@ -489,7 +494,8 @@ function drawLobby(){
   button(CX+62,650,80,56,'−',()=>removeBot(),{fill:'#3b4261',font:38});
   text('🤖 '+nb+' Bot'+(nb===1?'':'s'),CX+160,652,20,'#fff','800');
   button(CX+258,650,80,56,'+',()=>addBot(),{fill:'#3b4261',font:38});
-  button(CX+160,708,300,44,'Bot-Stärke: '+BOT_LEVELS[botLevel].name,()=>{ botLevel=(botLevel+1)%BOT_LEVELS.length; beep(500,.05,'triangle'); },{fill:'#3b4261',font:20});
+  button(CX+82,708,150,44,'Bots: '+BOT_LEVELS[botLevel].name,()=>{ botLevel=(botLevel+1)%BOT_LEVELS.length; beep(500,.05,'triangle'); },{fill:'#3b4261',font:18});
+  button(CX+238,708,150,44,'Autos: '+CAR_SCALES[carScaleIdx][0],()=>{ cycleCarScale(); beep(450,.05,'triangle'); },{fill:'#3b4261',font:18});
   // Wie viele sind angemeldet?
   const all=present(), humans=all.filter(q=>!q.bot), online=humans.filter(q=>q.conn).length, lost=humans.length-online;
   text('👥 '+all.length+' von '+MAX_PLAYERS+' angemeldet',CX+160,758,26,all.length?'#7CFC9A':'#c9d3ee','800');
