@@ -29,7 +29,8 @@ Gespielt wird mit 1 bis 8 Personen, dazu kommen optional Bots.
 2. Auf dem iPad den QR-Code scannen oder `play.html` öffnen und den Code eintippen. Danach „Bereit“ tippen.
 3. Auf der Tafel Spiel und Optionen wählen, bei Bedarf Bots (− / +) und Bot-Stärke (leicht, mittel, schwer; Standard leicht) einstellen und START tippen. Start und Neustart gibt es nur an der Tafel.
 4. Teamspiele (Fußball, Hockey): Spieler werden abwechselnd auf Links und Rechts verteilt.
-5. Mit dem ⌂-Knopf oben links (zweimal tippen) geht es zurück zur Spielwahl.
+5. Oben rechts gibt es einen Vollbild-Knopf (Symbol mit vier Ecken): einmal tippen für Vollbild, nochmal für normal. Auf dem iPad geht echtes Vollbild zusätzlich über Teilen → „Zum Home-Bildschirm“.
+6. Mit dem ⌂-Knopf oben links (zweimal tippen) geht es zurück zur Spielwahl.
 
 ## Steuerung am iPad
 - **Neigung (Standard):** iPad aufrecht halten und wie ein Lenkrad drehen. Gas, Turbo und Rück sind Knöpfe auf dem Bildschirm.

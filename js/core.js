@@ -375,7 +375,7 @@ function update(dt){
 // ---------- Zeichnen ----------
 function button(x,y,w,h,label,fn,opts){
   opts=opts||{};
-  const key=x+','+y; buttons.push({x,y,w,h,fn,key});
+  const key=x+','+y; buttons.push({x,y,w,h,fn,key,up:!!opts.up});
   const down=pressed===key&&performance.now()<pressUntil;
   ctx.save();
   rrect(ctx,x-w/2,y-h/2,w,h,Math.min(18,h/4));
@@ -496,6 +496,38 @@ function drawLobby(){
   text('📱 '+online+' iPad'+(online===1?'':'s')+'  ·  🤖 '+nb+' Bot'+(nb===1?'':'s')+(lost?'  ·  ⚠ '+lost+' getrennt':''),CX+160,784,17,'#c9d3ee','600');
 }
 
+// ---------- Vollbild ----------
+const fsEl=document.documentElement;
+const fsSupported=!!(fsEl.requestFullscreen||fsEl.webkitRequestFullscreen);
+const inFs=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+function toggleFs(){
+  try{
+    let r;
+    if(inFs()) r=(document.exitFullscreen||document.webkitExitFullscreen).call(document);
+    else r=(fsEl.requestFullscreen||fsEl.webkitRequestFullscreen).call(fsEl);
+    if(r&&r.catch) r.catch(()=>{});
+  }catch(e){}
+  setTimeout(resize,300);
+}
+document.addEventListener('fullscreenchange',()=>setTimeout(resize,150));
+document.addEventListener('webkitfullscreenchange',()=>setTimeout(resize,150));
+function drawFsButton(){
+  if(!fsSupported) return;
+  const x=1540,y=60,fs=inFs();
+  button(x,y,84,84,'',toggleFs,{fill:'rgba(255,255,255,.12)',up:true});
+  // Symbol: vier Ecken, nach außen (groß machen) oder nach innen (verkleinern)
+  ctx.save(); ctx.strokeStyle='#fff'; ctx.lineWidth=5; ctx.lineCap='round'; ctx.lineJoin='round';
+  const a=18, b=fs?7:22;
+  for(const [sx,sy] of [[-1,-1],[1,-1],[1,1],[-1,1]]){
+    ctx.beginPath();
+    ctx.moveTo(x+sx*b,y+sy*(b+(fs?a*.6:-a*.9)));
+    ctx.lineTo(x+sx*b,y+sy*b);
+    ctx.lineTo(x+sx*(b+(fs?a*.6:-a*.9)),y+sy*b);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawOverlay(){
   if(phase==='countdown'){
     const n=Math.ceil(phaseT-.4);
@@ -521,6 +553,7 @@ function drawOverlay(){
     button(CX+150,CY+70,270,84,'Spielwahl',()=>toLobby(),{fill:'#3b4261',font:30});
     text('Neue Mitspieler können jederzeit per QR-Code beitreten',CX,CY+150,20,'#9aa7c4','600');
   }
+  drawFsButton();
   if(phase==='countdown'||phase==='play'||phase==='roundEnd'){
     button(60,60,84,84,homeConfirm>0?'?':'⌂',()=>{ if(homeConfirm>0){homeConfirm=0;toLobby();} else homeConfirm=2.5; },
       {fill:homeConfirm>0?'#b42318':'rgba(255,255,255,.12)',font:30});
@@ -591,7 +624,7 @@ cv.addEventListener('pointerdown',e=>{
   audioInit();
   try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').catch(()=>{}); }catch(err){}
   const w=worldPos(e), b=hitButton(w.x,w.y);
-  if(b){ pressed=b.key; pressUntil=performance.now()+200; fire(b); }
+  if(b){ pressed=b.key; pressUntil=performance.now()+200; if(!b.up) fire(b); }
 });
 function upCancel(e){
   const w=worldPos(e), b=hitButton(w.x,w.y);
