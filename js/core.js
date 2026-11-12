@@ -425,14 +425,7 @@ function drawBadge(seat,p){
   const s=SEATS[seat];
   ctx.save(); ctx.translate(s.x*W,s.y*H); ctx.rotate(s.rot);
   const x=-115,y=-70,w=230,h=60;
-  if(!p){
-    if(phase==='lobby'){
-      ctx.globalAlpha=.45; ctx.setLineDash([8,8]); ctx.lineWidth=2; ctx.strokeStyle=COLORS[seat][1];
-      rrect(ctx,x,y,w,h,14); ctx.stroke();
-      ctx.setLineDash([]); text('frei',0,y+h/2,22,COLORS[seat][1],'600');
-    }
-    ctx.restore(); return;
-  }
+  if(!p){ ctx.restore(); return; }   // freie Plätze werden nicht angezeigt
   const out=p.car&&(p.car.dead||p.car.falling)&&phase!=='lobby';
   ctx.globalAlpha=out?.5:1;
   rrect(ctx,x,y,w,h,14); ctx.fillStyle=p.color; ctx.fill();
