@@ -4,21 +4,28 @@
    Gesteuert wird nur links/rechts (aus Sicht des Spielers). */
 (function(){
   const TH=16, BALL_R=13, BASE_SP=380, MAX_SP=820, PADDLE_SPEED=640;
-  const SIDEDEF={
-    unten: {O:[FX0,FY1],L:FX1-FX0,rot:0},
-    oben:  {O:[FX1,FY0],L:FX1-FX0,rot:Math.PI},
-    links: {O:[FX0,FY0],L:FY1-FY0,rot:Math.PI/2},
-    rechts:{O:[FX1,FY1],L:FY1-FY0,rot:-Math.PI/2},
-  };
+  // Spielfeld: ab 3 Spielern quadratisch (alle Seiten gleich lang), bei 2 Spielern wie bisher breit
+  let AX0=FX0, AX1=FX1, AY0=FY0, AY1=FY1;
+  function setArena(){
+    const square=present().length>=3, half=(FY1-FY0)/2;
+    AX0=square?CX-half:FX0; AX1=square?CX+half:FX1; AY0=FY0; AY1=FY1;
+  }
+  const sideDefs=()=>({
+    unten: {O:[AX0,AY1],L:AX1-AX0,rot:0},
+    oben:  {O:[AX1,AY0],L:AX1-AX0,rot:Math.PI},
+    links: {O:[AX0,AY0],L:AY1-AY0,rot:Math.PI/2},
+    rechts:{O:[AX1,AY1],L:AY1-AY0,rot:-Math.PI/2},
+  });
   let sides=[], ball={x:CX,y:CY,vx:0,vy:0,sp:BASE_SP}, serveT=1, trail=[], playTime=0;
 
   function mkSides(){
-    sides=[];
+    sides=[]; setArena();
+    const SIDEDEF=sideDefs();
     for(const name of Object.keys(SIDEDEF)){
       const d=SIDEDEF[name], T=[Math.cos(d.rot),Math.sin(d.rot)], n=[Math.sin(d.rot),-Math.cos(d.rot)];
       const sd={name,O:d.O,L:d.L,T,n,owners:[]};
       const ps=present().filter(p=>SEATS[p.seat].side===name);
-      const u0=p=>{ const s=SEATS[p.seat], x=clamp(s.x*W,FX0,FX1), y=clamp(s.y*H,FY0,FY1); return (x-d.O[0])*T[0]+(y-d.O[1])*T[1]; };
+      const u0=p=>{ const s=SEATS[p.seat], x=clamp(s.x*W,AX0,AX1), y=clamp(s.y*H,AY0,AY1); return (x-d.O[0])*T[0]+(y-d.O[1])*T[1]; };
       ps.sort((a,b)=>u0(a)-u0(b));
       ps.forEach((p,i)=>{
         const lo=i*d.L/ps.length, hi=(i+1)*d.L/ps.length, len=Math.min(150,(hi-lo)*.42);
@@ -141,7 +148,7 @@
     },
     draw(){
       ctx.fillStyle='#03050a'; ctx.fillRect(0,0,W,H);
-      ctx.fillStyle='#0b1226'; ctx.fillRect(FX0,FY0,FX1-FX0,FY1-FY0);
+      ctx.fillStyle='#0b1226'; ctx.fillRect(AX0,AY0,AX1-AX0,AY1-AY0);
       ctx.strokeStyle='rgba(255,255,255,.10)'; ctx.lineWidth=3;
       ctx.beginPath(); ctx.arc(CX,CY,120,0,Math.PI*2); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(CX-30,CY); ctx.lineTo(CX+30,CY); ctx.moveTo(CX,CY-30); ctx.lineTo(CX,CY+30); ctx.stroke();
