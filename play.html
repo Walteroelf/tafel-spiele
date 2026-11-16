@@ -29,6 +29,14 @@
   #setup{background:radial-gradient(circle at 50% 0%,color-mix(in srgb,var(--c) 55%,#0d1220),#0d1220 70%)}
   #badge{display:inline-block;padding:6px 22px;border-radius:999px;background:var(--c);color:#10131a;font-weight:900}
   #note{min-height:1.4em;color:#ffd24a}
+  #sensBox{display:flex;flex-direction:column;align-items:center;gap:8px;width:min(92vw,520px)}
+  #sensRow{display:flex;align-items:center;gap:14px}
+  #sensRow button{width:64px;height:64px;padding:0;font-size:36px;border-radius:50%}
+  #sensDots{font-size:30px;letter-spacing:.12em;min-width:5.6em;color:var(--c)}
+  #sensLbl{font-size:clamp(14px,2.4vw,18px);color:var(--mute)}
+  #meter{position:relative;width:100%;height:22px;border-radius:11px;background:#25305a}
+  #meterKnob{position:absolute;top:2px;left:50%;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:var(--c);border:2px solid #fff}
+  #meter::after{content:"";position:absolute;left:50%;top:-3px;width:2px;height:28px;background:#fff;opacity:.5}
 
   /* Steuerfläche */
   #pad{flex-direction:row;align-items:stretch;justify-content:stretch;padding:0;gap:0;border:10px solid var(--c)}
@@ -91,6 +99,12 @@
     <button id="mJoy">🕹️ Joystick</button>
     <button id="mTouch">👆 Schieber</button>
   </div>
+  <div id="sensBox">
+    <p><b>Empfindlichkeit</b> <span id="sensName"></span></p>
+    <div id="sensRow"><button id="sensMinus" aria-label="weniger empfindlich">−</button><span id="sensDots"></span><button id="sensPlus" aria-label="mehr empfindlich">+</button></div>
+    <div id="meter"><div id="meterKnob"></div></div>
+    <span id="sensLbl"></span>
+  </div>
   <p id="note"></p>
   <button class="big" id="readyBtn">👍 Bereit</button>
   <p id="waitTxt"></p>
@@ -135,6 +149,23 @@ let room=(params.get('room')||'').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4)
 let token=lsGet('scooterToken')||(Math.random().toString(36).slice(2)+Date.now().toString(36));
 lsSet('scooterToken',token);
 
+// Empfindlichkeit 1 (ruhig) bis 5 (sehr direkt), pro Steuerungsart getrennt und auf dem Gerät gemerkt
+const SENS_ANGLE=[60,48,38,30,22];            // Neigung: Winkel bis zum vollen Einschlag (Grad)
+const SENS_RANGE=[.40,.34,.28,.22,.16];       // Schieber: Weg bis zum vollen Einschlag (Anteil der Breite)
+const SENS_JOY=[120,105,90,75,60];            // Joystick: Weg bis zum vollen Ausschlag (Pixel)
+let sensLv={tilt:3,joy:3,touch:3};
+try{ const o=JSON.parse(lsGet('tafelSens')||'{}'); for(const k of ['tilt','joy','touch']) if(o[k]>=1&&o[k]<=5) sensLv[k]=o[k]|0; }catch(e){}
+const sens=()=>sensLv[mode]||3;
+function setSens(d){
+  sensLv[mode]=clamp(sens()+d,1,5); lsSet('tafelSens',JSON.stringify(sensLv)); renderSens();
+}
+function renderSens(){
+  const v=sens();
+  $('sensDots').textContent='●'.repeat(v)+'○'.repeat(5-v);
+  $('sensName').textContent='('+(mode==='tilt'?'Neigung':(mode==='joy'?'Joystick':'Schieber'))+')';
+  $('sensLbl').textContent=v<=2?'ruhiger: man muss weiter bewegen':(v>=4?'direkter: kleine Bewegung reicht':'normal');
+  $('meter').style.display=mode==='tilt'?'':'none';
+}
 let mode='tilt';   // Neigung ist immer der Standard (Touch kann man pro Sitzung wählen)
 let me={seat:-1,color:'#3b82f6',name:'',side:''};
 let st={phase:'lobby',alive:false,inRound:false,score:0,target:3,winner:-1,winnerName:'',champion:-1,championName:'',me:-1,n:0};
@@ -149,6 +180,7 @@ function setStatus(title,text,back){
 const SIDE={unten:'untere',oben:'obere',links:'linke',rechts:'rechte'};
 
 function render(){
+  renderSens();
   document.documentElement.style.setProperty('--c',me.color);
   document.body.classList.toggle('tilt',mode==='tilt');
   document.body.classList.toggle('joy',mode==='joy');
@@ -239,7 +271,7 @@ const knob=$('knob');
 let joyVec=[0,0];
 (function setupSteer(){
   const z=$('left'), jb=$('joyBase'), jk=$('joyKnob'); let id=null, ox=0, oy=0;
-  const R=90;
+  const R=()=>SENS_JOY[sens()-1];
   z.addEventListener('pointerdown',e=>{
     if((mode!=='touch'&&mode!=='joy')||id!==null) return;
     id=e.pointerId; ox=e.clientX; oy=e.clientY; try{z.setPointerCapture(id);}catch(err){}
@@ -254,12 +286,12 @@ let joyVec=[0,0];
     if(e.pointerId!==id) return;
     if(mode==='joy'){
       let dx=e.clientX-ox, dy=e.clientY-oy; const len=Math.hypot(dx,dy);
-      if(len>R){ dx*=R/len; dy*=R/len; }
-      joyVec=[dx/R,dy/R];
+      const RR=R(); if(len>RR){ dx*=RR/len; dy*=RR/len; }
+      joyVec=[dx/RR,dy/RR];
       jk.style.transform='translate('+dx+'px,'+dy+'px)';
       return;
     }
-    const range=Math.max(90,z.clientWidth*.28);
+    const range=Math.max(60,z.clientWidth*SENS_RANGE[sens()-1]);
     steerTouch=clamp((e.clientX-ox)/range,-1,1);
     knob.style.transform='translateX('+(steerTouch*z.clientWidth*.32)+'px)';
   });
@@ -298,7 +330,7 @@ function wheelDelta(){
 }
 function calibrate(){ if(wheel!==null) wheelRef=wheel; }
 function tiltSteer(){
-  const deg=wheelDelta(), dz=4, full=38;
+  const deg=wheelDelta(), dz=4, full=SENS_ANGLE[sens()-1];
   const v=clamp((Math.abs(deg)-dz)/(full-dz),0,1)*Math.sign(deg);
   tiltSmooth+=(v-tiltSmooth)*.5;
   $('wheel').style.transform='rotate('+clamp(deg,-90,90)+'deg)';
@@ -330,7 +362,7 @@ async function setMode(m){
     if(!ok){ m='touch'; }
     else $('note').textContent='Halte das iPad aufrecht wie ein Lenkrad und drehe es. Tipp: Drehsperre im Kontrollzentrum einschalten.';
   }
-  mode=m; steerTouch=0; joyVec=[0,0];
+  mode=m; steerTouch=0; joyVec=[0,0]; renderSens();
   if(m==='joy') $('note').textContent='Schiebe den Finger dorthin, wohin das Auto fahren soll. Oben zeigt immer zur Tafelmitte. Gas ist automatisch.';
   sendMsg({k:'mode',mode:m});
   render();
@@ -338,6 +370,8 @@ async function setMode(m){
 }
 $('mTouch').addEventListener('click',()=>setMode('touch'));
 $('mJoy').addEventListener('click',()=>setMode('joy'));
+$('sensMinus').addEventListener('click',()=>setSens(-1));
+$('sensPlus').addEventListener('click',()=>setSens(1));
 $('mTilt').addEventListener('click',()=>setMode('tilt'));
 $('readyBtn').addEventListener('click',()=>setMode(mode));
 $('enableTiltBtn').addEventListener('click',()=>setMode('tilt'));
@@ -347,6 +381,7 @@ $('setup').addEventListener('click',e=>{ if(e.target.id==='setup'&&st.phase!=='l
 
 // ---------- Senden (30x pro Sekunde) ----------
 setInterval(()=>{
+  if(mode==='tilt'&&$('setup').classList.contains('on')){ const v=tiltSteer(); $('meterKnob').style.left=(50+v*46)+'%'; }
   if(!connOpen||!joined) return;
   if(st.phase==='lobby'||st.phase==='final') return;
   if(mode==='joy'){ sendMsg({k:'in',j:[Math.round(joyVec[0]*100)/100,Math.round(joyVec[1]*100)/100],s:0,g:0,t:turboOn?1:0}); return; }

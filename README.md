@@ -38,6 +38,7 @@ Gespielt wird mit 1 bis 8 Personen, dazu kommen optional Bots.
   Safari fragt beim ersten Mal nach Zugriff auf die Bewegungssensoren.
 - **Joystick:** Finger links auf den Bildschirm legen und dorthin schieben, wohin das Auto fahren soll. Oben zeigt immer zur Tafelmitte, egal an welcher Seite man steht. Das Gas ist automatisch, TURBO bleibt als Knopf.
 - **Schieber (Touch):** links Finger ziehen zum Lenken, rechts GAS, TURBO und RÜCK.
+- **Empfindlichkeit:** In den Einstellungen auf dem iPad (⚙ oben rechts) lässt sich die Empfindlichkeit von 1 (ruhig) bis 5 (direkt) mit − und + einstellen, getrennt für Neigung, Joystick und Schieber. Bei der Neigung zeigt ein Balken live, wie stark gelenkt wird. Die Einstellung bleibt auf dem Gerät gespeichert.
 - Bei der Lichtspur gibt es nur Lenken und TURBO (Spurt).
 - Bei 4er-Pong gibt es nur links/rechts (Neigung, Joystick oder Schieber), keine Knöpfe.
 - Bei der Feuerwehr heißt der Knopf 💧 WASSER (gedrückt halten). Der Tank wird in der Mitte (Hydrant) aufgefüllt.
