@@ -70,20 +70,19 @@
   // Hintergrund und Boden werden nur bei Änderung neu gemalt und sonst als Bild kopiert (spart viel Rechenzeit).
   const FLOOR=R0*2+40;
   let bgCv=null, floorCv=null, floorKey='';
-  function layer(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
   function getBg(){
-    if(!bgCv){
-      bgCv=layer(W,H); const x=bgCv.getContext('2d');
+    if(!bgCv||bgCv.ls!==layerScale()){
+      bgCv=mkLayer(W,H); const x=bgCv.x;
       const bg=x.createRadialGradient(CX,CY,100,CX,CY,900); bg.addColorStop(0,'#14192b'); bg.addColorStop(1,'#05070d');
       x.fillStyle=bg; x.fillRect(0,0,W,H);
     }
-    return bgCv;
+    return bgCv.c;
   }
   function getFloor(eis){
-    const key=eis+'|'+Math.round(curR/2);
-    if(!floorCv){ floorCv=layer(FLOOR,FLOOR); floorKey=''; }
+    const ls=layerScale(), key=eis+'|'+Math.round(curR/2)+'|'+ls;
+    if(!floorCv||floorCv.ls!==ls){ floorCv=mkLayer(FLOOR,FLOOR); floorKey=''; }
     if(key!==floorKey){
-      floorKey=key; const x=floorCv.getContext('2d'), c=FLOOR/2;
+      floorKey=key; const x=floorCv.x, c=FLOOR/2;
       x.clearRect(0,0,FLOOR,FLOOR);
       const gr=x.createRadialGradient(c,c-60,40,c,c,curR);
       if(eis){ gr.addColorStop(0,'#b9d9ee'); gr.addColorStop(1,'#6e9bbd'); } else { gr.addColorStop(0,'#4a5470'); gr.addColorStop(1,'#272e42'); }
@@ -91,7 +90,7 @@
       x.strokeStyle=eis?'rgba(255,255,255,.35)':'rgba(255,255,255,.10)'; x.lineWidth=2;
       for(const f of [.66,.33]){ x.beginPath(); x.arc(c,c,curR*f,0,Math.PI*2); x.stroke(); }
     }
-    return floorCv;
+    return floorCv.c;
   }
 
   const g={
@@ -105,6 +104,7 @@
       {key:'loch',label:'Wandernde Löcher',values:[['aus','aus'],['an','an']],def:'aus'},
     ],
     bot,
+    teardown(){ bgCv=null; floorCv=null; floorKey=''; },
     playT:()=>arenaT,
     startRound(){
       arenaT=0; curR=R0; cells=[]; holeT=0; buildObstacles();
@@ -151,7 +151,7 @@
       // Roter Schein am Rand: dünne Ringe statt shadowBlur/Vollkreisen (auf schwachen Geräten viel schneller)
       ctx.lineWidth=10;
       for(let i=1;i<=3;i++){ ctx.strokeStyle='rgba(255,70,50,'+(.22-i*.05)+')'; ctx.beginPath(); ctx.arc(CX,CY,curR+i*10,0,Math.PI*2); ctx.stroke(); }
-      ctx.drawImage(getFloor(eis),CX-FLOOR/2,CY-FLOOR/2);
+      ctx.drawImage(getFloor(eis),CX-FLOOR/2,CY-FLOOR/2,FLOOR,FLOOR);
       // Löcher
       for(const c of cells){
         const R=RINGS[c.ring], a0=c.sec/R.n*Math.PI*2, a1=(c.sec+1)/R.n*Math.PI*2;

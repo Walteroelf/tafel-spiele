@@ -8,8 +8,8 @@
   const SPEED=150, TURN=2.8;
   let grid=new Int8Array(TOTAL).fill(-1), trailGrid=new Uint8Array(TOTAL), counts=new Array(MAX_PLAYERS).fill(0);
   let dirty=[], timeLeft=90, playTime=0;
-  const terr=document.createElement('canvas'); terr.width=W; terr.height=H;
-  const tx=terr.getContext('2d');
+  let terrO=null, tx=null;
+  function ensureTerr(){ if(terrO&&terrO.ls===layerScale()) return; terrO=mkLayer(W,H); tx=terrO.x; }
 
   const dangerous=()=>opt('spur')==='gefaehrlich';
   const cellOf=(x,y)=>{ const gx=Math.floor((x-FX0)/CELL), gy=Math.floor((y-FY0)/CELL); return (gx<0||gy<0||gx>=GWc||gy>=GHc)?-1:gy*GWc+gx; };
@@ -73,7 +73,7 @@
     return pts;
   }
   function flush(){
-    if(!dirty.length) return;
+    if(!dirty.length||!tx) return;
     dirty=[];
     tx.clearRect(0,0,W,H);
     const has=new Array(MAX_PLAYERS).fill(false);
@@ -235,9 +235,10 @@
       {key:'dauer',label:'Dauer',values:[['60','60 s'],['90','90 s'],['120','120 s']],def:'90'},
     ],
     bot,playT:()=>playTime,
+    teardown(){ terrO=null; tx=null; },
     hudExtra:p=>'🗺️ '+pct(p)+'%',
     startRound(){
-      grid.fill(-1); trailGrid.fill(0); counts.fill(0); dirty=[]; tx.clearRect(0,0,W,H);
+      ensureTerr(); grid.fill(-1); trailGrid.fill(0); counts.fill(0); dirty=[]; tx.clearRect(0,0,W,H);
       playTime=0; timeLeft=+opt('dauer');
       for(const p of present()) newCar(p);
       recount(); flush();
@@ -272,7 +273,7 @@
       ctx.strokeStyle='rgba(0,0,0,.06)'; ctx.lineWidth=1;
       for(let x=FX0;x<=FX1;x+=40){ ctx.beginPath(); ctx.moveTo(x,FY0); ctx.lineTo(x,FY1); ctx.stroke(); }
       for(let y=FY0;y<=FY1;y+=40){ ctx.beginPath(); ctx.moveTo(FX0,y); ctx.lineTo(FX1,y); ctx.stroke(); }
-      ctx.globalAlpha=.78; ctx.drawImage(terr,0,0); ctx.globalAlpha=1;
+      ctx.globalAlpha=.78; if(terrO) ctx.drawImage(terrO.c,0,0,W,H); ctx.globalAlpha=1;
       // Spuren als weiche, runde Linie durch die Zellmitten
       ctx.globalAlpha=dangerous()?.95:.55; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.lineWidth=CELL*.8;
       for(const p of present()){

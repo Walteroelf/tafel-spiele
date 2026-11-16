@@ -7,19 +7,25 @@
 
   // Spuren werden einmal auf zwei Zwischen-Leinwände gemalt (Glow + Kern) und pro Bild nur kopiert.
   // So wird das Zeichnen nicht langsamer, je länger die Spuren werden.
-  const mkLayer=()=>{ const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d'); x.lineCap='round'; x.lineJoin='round'; return {c,x}; };
-  const glowL=mkLayer(), coreL=mkLayer();
+  let glowL=null, coreL=null;
+  function ensureLayers(){
+    if(glowL&&glowL.ls===layerScale()) return;
+    glowL=mkLayer(W,H); coreL=mkLayer(W,H);
+    for(const L of [glowL,coreL]){ L.x.lineCap='round'; L.x.lineJoin='round'; }
+  }
   const BG=[7,11,24];
   function soft(hex,k){   // Farbe mit dem Hintergrund mischen (deckend statt transparent, damit sich nichts aufaddiert)
     const n=parseInt(hex.slice(1),16), r=n>>16&255, g=n>>8&255, b=n&255;
     return 'rgb('+Math.round(BG[0]+(r-BG[0])*k)+','+Math.round(BG[1]+(g-BG[1])*k)+','+Math.round(BG[2]+(b-BG[2])*k)+')';
   }
   function seg(p,x0,y0,x1,y1){
+    if(!glowL) return;
     glowL.x.strokeStyle=soft(p.color,.3); glowL.x.lineWidth=13; glowL.x.beginPath(); glowL.x.moveTo(x0,y0); glowL.x.lineTo(x1,y1); glowL.x.stroke();
     coreL.x.strokeStyle=p.color; coreL.x.lineWidth=5; coreL.x.beginPath(); coreL.x.moveTo(x0,y0); coreL.x.lineTo(x1,y1); coreL.x.stroke();
   }
-  function clearLayers(){ glowL.x.clearRect(0,0,W,H); coreL.x.clearRect(0,0,W,H); }
+  function clearLayers(){ if(!glowL) return; glowL.x.clearRect(0,0,W,H); coreL.x.clearRect(0,0,W,H); }
   function rebuild(){
+    if(!glowL) return;
     clearLayers();
     for(const p of present()){
       const c=p.car; if(!c||c.dead||!c.trail.length) continue;
@@ -82,8 +88,9 @@
     hint:'Nur lenken! Wand und Spuren sind tödlich. TURBO = Spurt',
     targets:[1,3,5],defTarget:3,
     bot,playT:()=>playT,
+    teardown(){ glowL=null; coreL=null; },
     startRound(){
-      grid=new Uint8Array(GW*GH); playT=0; clearLayers();
+      grid=new Uint8Array(GW*GH); playT=0; ensureLayers(); clearLayers();
       for(const p of present()) p.car=withStart(spawn(p));
     },
     update(dt,ph){
@@ -140,7 +147,7 @@
       ctx.strokeStyle='#38bdf8'; ctx.globalAlpha=.10;
       for(const w of [22,14]){ ctx.lineWidth=w; ctx.strokeRect(FX0,FY0,FX1-FX0,FY1-FY0); }
       ctx.globalAlpha=1; ctx.lineWidth=6; ctx.strokeStyle='#7dd3fc'; ctx.strokeRect(FX0,FY0,FX1-FX0,FY1-FY0);
-      ctx.drawImage(glowL.c,0,0); ctx.drawImage(coreL.c,0,0);
+      if(glowL){ ctx.drawImage(glowL.c,0,0,W,H); ctx.drawImage(coreL.c,0,0,W,H); }
       ctx.lineCap='round';
       for(const p of present()){   // letztes Stück bis zum Kopf
         const c=p.car; if(!c||c.dead) continue;

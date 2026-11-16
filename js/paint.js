@@ -4,8 +4,8 @@
 (function(){
   const CELL=12, GWc=Math.ceil((FX1-FX0)/CELL), GHc=Math.ceil((FY1-FY0)/CELL), TOTAL=GWc*GHc;
   let grid=new Int8Array(TOTAL).fill(-1), counts=new Array(MAX_PLAYERS).fill(0), timeLeft=60, playTime=0;
-  const layer=document.createElement('canvas'); layer.width=W; layer.height=H;
-  const lx=layer.getContext('2d');
+  let layerO=null, lx=null;
+  function ensureLayer(){ if(layerO&&layerO.ls===layerScale()) return; layerO=mkLayer(W,H); lx=layerO.x; }
 
   function paintDisc(p,x,y,r){
     lx.fillStyle=p.color; lx.beginPath(); lx.arc(x,y,r,0,Math.PI*2); lx.fill();
@@ -61,10 +61,11 @@
     targets:[1,3,5],defTarget:3,
     options:[{key:'dauer',label:'Dauer',values:[['45','45 s'],['60','60 s'],['90','90 s']],def:'60'}],
     bot,playT:()=>playTime,
+    teardown(){ layerO=null; lx=null; },
     hudExtra:p=>'🎨 '+pct(p)+'%',
     startRound(){
       grid.fill(-1); counts.fill(0); playTime=0; timeLeft=+opt('dauer');
-      lx.clearRect(0,0,W,H);
+      ensureLayer(); lx.clearRect(0,0,W,H);
       for(const p of present()) p.car=spawn(p);
     },
     update(dt,ph){
@@ -95,7 +96,7 @@
       ctx.strokeStyle='rgba(255,255,255,.05)'; ctx.lineWidth=2;
       for(let x=FX0;x<=FX1;x+=80){ ctx.beginPath(); ctx.moveTo(x,FY0); ctx.lineTo(x,FY1); ctx.stroke(); }
       for(let y=FY0;y<=FY1;y+=80){ ctx.beginPath(); ctx.moveTo(FX0,y); ctx.lineTo(FX1,y); ctx.stroke(); }
-      ctx.globalAlpha=.88; ctx.drawImage(layer,0,0); ctx.globalAlpha=1;
+      ctx.globalAlpha=.88; if(layerO) ctx.drawImage(layerO.c,0,0,W,H); ctx.globalAlpha=1;
       ctx.restore();
       ctx.lineWidth=10; ctx.strokeStyle='#f5c518'; rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,40); ctx.stroke();
       for(const p of present()) drawCar(p);

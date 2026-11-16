@@ -60,6 +60,6 @@ Lokal testen: `python3 -m http.server 8765` im Ordner starten, dann `http://loca
 
 ## Wenn die Tafel langsam ist
 - `board.html?debug=1` öffnen (oder auf der Tastatur `F` drücken): oben erscheint eine Anzeige mit Bildern pro Sekunde und Auflösung.
-- Die Tafel senkt bei dauerhaft niedriger Bildrate automatisch Auflösung und Effekte („Sparmodus“).
-- Mit `board.html?cap=1280` lässt sich die maximale Breite der Zeichenfläche von Hand begrenzen (Standard 1920).
+- Die Auflösung regelt sich automatisch: Die Tafel startet so scharf wie möglich (bis 2560 Pixel Breite) und probiert bei flüssigem Lauf bis zur vollen Tafelauflösung höher. Wird es langsam, geht sie eine Stufe zurück und probiert erst nach einer Pause wieder (Effekte werden bei niedrigen Stufen vereinfacht).
+- Mit `board.html?cap=1920` lässt sich die Breite der Zeichenfläche fest einstellen (schaltet die Automatik aus).
 - Hilft nichts: Browser-Tab oder Tafel-App einmal komplett schließen und neu öffnen, damit die Grafikbeschleunigung neu startet.

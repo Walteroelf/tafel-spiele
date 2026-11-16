@@ -44,8 +44,19 @@ function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,
 const cv=document.getElementById('c'); let ctx=cv.getContext('2d');
 let scale=1,offX=0,offY=0;
 const QS=new URLSearchParams(location.search);
-let capW=Math.max(640,+QS.get('cap')||1920);      // maximale Breite der Zeichenfläche in Pixeln (4K-Tafel wird auf Full-HD begrenzt)
+// Auflösung: Die Tafel wählt automatisch die schärfste Stufe, die flüssig läuft (hoch und runter).
+// ?cap=1920 stellt eine feste Breite ein und schaltet die Automatik aus.
+const Q_LEVELS=[800,960,1280,1920,2560,3840];   // mögliche Breiten der Zeichenfläche in Pixeln
+const manualCap=+QS.get('cap')||0;
+let qi=3, capW=manualCap||1920;
 let lowFx=false, showFps=QS.has('debug'), ftAvg=16, fpsNote='';
+const nativeW=()=>Math.round(cv.getBoundingClientRect().width*(devicePixelRatio||1));
+(function initQuality(){   // Start: so scharf wie die Tafel, höchstens 2560; Automatik probiert später weiter
+  if(manualCap) return;
+  const n=nativeW()||1920; qi=0;
+  for(let i=0;i<Q_LEVELS.length;i++) if(Q_LEVELS[i]<=Math.min(n,2560)) qi=i;
+  capW=Q_LEVELS[qi];
+})();
 function resize(){
   // Größe aus dem tatsächlich sichtbaren Bereich nehmen (iPad-Safari: 100vh ist höher als der sichtbare Teil)
   let d=devicePixelRatio||1; const r=cv.getBoundingClientRect();
@@ -58,6 +69,14 @@ addEventListener('resize',resize); addEventListener('orientationchange',()=>setT
 if(window.visualViewport) visualViewport.addEventListener('resize',resize);
 if(window.ResizeObserver) new ResizeObserver(()=>resize()).observe(cv);   // auch wenn die Fläche erst später ihre Größe bekommt
 resize();
+// Ebenen für Zwischenspeicher (Spuren, Boden, Farbe …): bei hoher Auflösung feiner, sonst bleiben sie unscharf
+function layerScale(){ return scale>=1.5?2:(scale>=1.1?1.5:1); }
+function mkLayer(w,h){
+  const ls=layerScale(), c=document.createElement('canvas');
+  c.width=Math.round(w*ls); c.height=Math.round(h*ls);
+  const x=c.getContext('2d'); x.setTransform(ls,0,0,ls,0,0);
+  return {c,x,ls};
+}
 
 // ---------- Ton ----------
 let ac=null;
@@ -327,6 +346,7 @@ function startRound(){
   phase='countdown'; phaseT=3.4;
 }
 function toLobby(){
+  if(game&&game.teardown) game.teardown();   // große Zwischenspeicher des Spiels freigeben
   phase='lobby'; winners=[]; champions=[]; particles=[];
   for(const p of present()){ p.score=0; p.car=null; p.team=null; }
 }
@@ -654,7 +674,7 @@ addEventListener('keydown',e=>{
 });
 
 // ---------- Start ----------
-let lastT=performance.now(), slowT=0, degradeCool=0;
+let lastT=performance.now(), slowAcc=0, fastAcc=0, noUpUntil=0, coolMul=1, clock=0;
 function frame(t){
   const real=Math.max(0,(t-lastT)/1000); lastT=t;
   // Spielzeit läuft in Echtzeit: Ist die Tafel langsam, wird in mehreren kleinen Schritten nachgeholt,
@@ -663,11 +683,19 @@ function frame(t){
   for(let i=0;i<steps;i++) update(el/steps);
   draw();
   ftAvg+=(Math.min(real,.5)*1000-ftAvg)*.08;
-  // Automatischer Sparmodus: dauerhaft unter ~22 Bildern pro Sekunde -> Auflösung und Effekte senken
-  degradeCool-=real;
-  if(ftAvg>45&&degradeCool<=0&&capW>800){
-    capW=capW>1400?1280:(capW>1000?960:800); lowFx=true; degradeCool=4; ftAvg=25; resize();
-    fpsNote=' · Auflösung gesenkt';
+  // Automatische Auflösung: langsam -> eine Stufe runter (und länger nicht wieder hoch),
+  // dauerhaft flüssig -> eine Stufe hoch, solange die Tafel noch mehr Pixel hat.
+  clock+=real;
+  if(!manualCap){
+    if(ftAvg>38){ slowAcc+=real; fastAcc=0; }
+    else if(ftAvg<19){ fastAcc+=real; slowAcc=Math.max(0,slowAcc-real); }
+    else { slowAcc=Math.max(0,slowAcc-real); fastAcc=0; }
+    if(slowAcc>1.5&&qi>0){
+      qi--; capW=Q_LEVELS[qi]; slowAcc=0; fastAcc=0; noUpUntil=clock+60*coolMul; coolMul=Math.min(8,coolMul*2);
+      lowFx=qi<=2; ftAvg=22; resize(); fpsNote=' · Auflösung gesenkt';
+    } else if(fastAcc>6&&qi<Q_LEVELS.length-1&&clock>noUpUntil&&cv.width<nativeW()-2){
+      qi++; capW=Q_LEVELS[qi]; fastAcc=0; lowFx=qi<=2; ftAvg=17; resize(); fpsNote=' · Auflösung erhöht';
+    }
   }
   requestAnimationFrame(frame);
 }
