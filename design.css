@@ -1,0 +1,140 @@
+/* ==========================================================================
+   Gemeinsames Design der Unterrichts-Apps (Förderschule KME)
+   Farben angelehnt an Olympia München 1972 (Otl Aicher):
+   sieben Farben plus Weiß, kein Rot, kein Schwarz. Regeln: DESIGN.md
+   Diese Datei ist in allen Apps gleich. App-eigenes gehört in style.css.
+   Version 3 (Dunkelmodus in Mittelblau)
+   ========================================================================== */
+
+:root {
+  /* Palette */
+  --hellblau:    #4DB2E6;  /* Hauptfarbe, Hauptknopf */
+  --blau:        #0067B1;  /* nur Schrift, Links, Linien, Symbole auf Weiß, nie als Fläche */
+  --gruen:       #46A84A;  /* „Richtig“, Weiter */
+  --hellgruen:   #A6D27A;
+  --gelb:        #FFD100;  /* Hinweis, Markierung, Fokus */
+  --orange:      #F39200;  /* „Schau noch mal“ */
+  --silber:      #B9C1C8;
+  --weiss:       #FFFFFF;
+  --dunkelblau:  #0D2B4E;  /* Schrift statt Schwarz, auf jeder Farbfläche */
+
+  /* Fachfarben als Signal im Stundenplan. Nur als Fläche mit dunkelblauer Schrift.
+     Deutsch ist ein warmes Zinnoberrot, kein Signalrot (4,7 : 1 mit Dunkelblau). */
+  --fach-deutsch: #EF6B45;
+  --fach-mathe:   var(--hellblau);
+
+  /* Akzent der App: Hauptknöpfe, Auswahl. Standard Hellblau, eine App kann ihre Fachfarbe setzen. */
+  --app-akzent:  var(--hellblau);
+
+  /* dunklere Töne für farbige Schrift auf Weiß */
+  --gruen-text:  #1E6B2A;
+  --orange-text: #9A4F00;
+  --gruen-schrift: var(--gruen-text);    /* im Dunkelmodus heller */
+  --orange-schrift: var(--orange-text);
+
+  /* Rollen (wechseln im Dunkelmodus) */
+  --hg:          #EEF5FA;  /* Seitenhintergrund */
+  --karte:       #FFFFFF;  /* Karten, Fenster */
+  --flaeche-2:   #DCE7F0;  /* Reiterleiste, leise Flächen */
+  --auswahl:     #DCEFFA;  /* ausgewählte Karte */
+  --text:        var(--dunkelblau);
+  --leise:       #4A5E74;  /* Nebentext, 6,1 : 1 auf --hg */
+  --linie:       #D5DEE6;  /* Trennlinien (nur Deko) */
+  --rand:        #6E8094;  /* Ränder von Eingabefeldern und Schaltern, mind. 3 : 1 */
+  --akzent-text: var(--blau);
+  --hinweis-text: var(--orange-text);
+
+  /* Schrift */
+  --schrift: "Andika", system-ui, -apple-system, sans-serif;
+  --gr-1: 18px;
+  --gr-2: 22px;
+  --gr-3: 28px;
+  --gr-4: 36px;
+
+  /* Abstände (8er-Raster) */
+  --a-1: 8px;
+  --a-2: 16px;
+  --a-3: 24px;
+  --a-4: 32px;
+
+  /* Formen */
+  --rundung: 12px;
+  --rundung-gross: 20px;
+  --knopf-hoehe: 56px;
+  --rand-breite: 2px;
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --hg:          #1D4F80;  /* Mittelblau, Text 7,4 : 1 */
+    --karte:       #23598D;
+    --flaeche-2:   #2A6498;
+    --auswahl:     #2F6CA3;
+    --text:        #E8F1F8;
+    --leise:       #D6E7F5;
+    --linie:       #3A80BC;
+    --rand:        #B4D2EC;
+    --akzent-text: #B5E2FC;  /* Hellblau, aufgehellt, damit Schrift auf Mittelblau 4,5 : 1 erreicht */
+    --hinweis-text: #FFC266; /* Orange, aufgehellt */
+    --gruen-schrift: #BFE39A;
+    --orange-schrift: #FFC266;
+  }
+}
+
+/* ---------- Grundlage ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: var(--schrift);
+  font-size: var(--gr-1);
+  line-height: 1.4;
+  color: var(--text);
+  -webkit-text-size-adjust: 100%;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+a { color: var(--akzent-text); }
+
+/* Fokus-Rahmen für Taster und Tastatur: Gelb innen, Dunkelblau außen, auf jeder Farbe sichtbar */
+:focus-visible {
+  outline: 4px solid var(--gelb);
+  outline-offset: 0;
+  box-shadow: 0 0 0 7px var(--dunkelblau);
+}
+
+/* ---------- Knöpfe ---------- */
+/* Hauptknopf: Hellblau. Alle Knöpfe mit dunkelblauer Schrift, flach, ohne Schatten. */
+.knopf {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--a-1);
+  min-height: var(--knopf-hoehe);
+  padding: 0 var(--a-3);
+  border: var(--rand-breite) solid transparent;
+  border-radius: var(--rundung);
+  background: var(--app-akzent); color: var(--dunkelblau);
+  font-weight: 700; text-decoration: none;
+}
+.knopf.leise   { background: var(--karte); color: var(--text); border-color: var(--rand); }
+.knopf.gruen   { background: var(--gruen); }
+.knopf.gelb    { background: var(--gelb); }
+.knopf.orange  { background: var(--orange); }
+
+/* Symbole: eigene Linien-SVGs, Farbe = Schriftfarbe */
+.symbol {
+  width: 1.2em; height: 1.2em; flex: none; vertical-align: -0.2em;
+  fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* ---------- Ruhige Bewegung, wenn das iPad es so eingestellt hat ----------
+   Langsame Anzeigen, die etwas bedeuten (z. B. ein ablaufender Zeitbalken),
+   bekommen die Klasse .bewegung-erlaubt und laufen weiter. */
+@media (prefers-reduced-motion: reduce) {
+  *:not(.bewegung-erlaubt), *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -4,26 +4,54 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tafel-Spiele</title>
+<link rel="stylesheet" href="design.css?v=3">
 <style>
-  :root{--bg:#0d1220;--card:#1a2238;--txt:#f2f5ff;--mute:#9aa7c4}
-  html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,sans-serif}
+@font-face{font-family:"Andika";font-weight:400;font-display:swap;src:url("schriften/andika-400.woff2") format("woff2")}
+@font-face{font-family:"Andika";font-weight:700;font-display:swap;src:url("schriften/andika-700.woff2") format("woff2")}
+.band{display:flex;height:12px;flex:none}
+.band i{flex:1}
+.band i:nth-child(1){background:var(--hellblau)}.band i:nth-child(2){background:var(--blau)}
+.band i:nth-child(3){background:var(--gruen)}.band i:nth-child(4){background:var(--hellgruen)}
+.band i:nth-child(5){background:var(--gelb)}.band i:nth-child(6){background:var(--orange)}
+.band i:nth-child(7){background:var(--silber)}
+.sprite{position:absolute;width:0;height:0;overflow:hidden}
+  :root{--bg:var(--hg);--card:var(--karte);--txt:var(--text);--mute:var(--leise)}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:var(--schrift)}
   main{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:24px;text-align:center}
   h1{margin:0;font-size:clamp(32px,7vw,64px)}
   p{margin:0;color:var(--mute);font-size:clamp(16px,2.5vw,22px);max-width:620px}
   .row{display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
   a{display:block;padding:26px 34px;border-radius:24px;background:var(--card);color:var(--txt);text-decoration:none;
-    font-size:clamp(20px,3.5vw,32px);font-weight:800;border:3px solid #34406a;min-width:min(78vw,300px)}
+    font-size:clamp(20px,3.5vw,32px);font-weight:800;border:3px solid var(--rand);min-width:min(78vw,300px)}
   a small{display:block;font-weight:500;font-size:.55em;color:var(--mute);margin-top:6px}
-  a:hover{border-color:#3b82f6}
+  a:hover{background:var(--hellblau);color:var(--dunkelblau);border-color:var(--dunkelblau)}
+  a:hover small{color:var(--dunkelblau)}
+  a .symbol{width:1em;height:1em}
+  h1 .symbol{width:.9em;height:.9em}
 </style>
 </head>
 <body>
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-spiel" viewBox="0 0 24 24"><rect x="2.5" y="7" width="19" height="10.5" rx="5"/><path d="M7.5 10v4.5M5.25 12.25h4.5"/><circle cx="15.5" cy="11" r=".6"/><circle cx="17.8" cy="13.4" r=".6"/></symbol>
+  <symbol id="i-tafel" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16.5V20"/></symbol>
+  <symbol id="i-tablet" viewBox="0 0 24 24"><rect x="5.5" y="2.5" width="13" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></symbol>
+  <symbol id="i-joystick" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.2"/><path d="M12 10.2V15M5 20.5v-2.5h14v2.5z"/></symbol>
+  <symbol id="i-finger" viewBox="0 0 24 24"><path d="M3.5 12h17M7 8.5 3.5 12 7 15.5M17 8.5l3.5 3.5-3.5 3.5"/></symbol>
+  <symbol id="i-haken" viewBox="0 0 24 24"><path d="M4.5 12.5 10 18 19.5 6.5"/></symbol>
+  <symbol id="i-zahnrad" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></symbol>
+  <symbol id="i-pfeil-links" viewBox="0 0 24 24"><path d="M19.5 12h-15M11 5.5 4.5 12l6.5 6.5"/></symbol>
+  <symbol id="i-pfeil-rechts" viewBox="0 0 24 24"><path d="M4.5 12h15M13 5.5l6.5 6.5-6.5 6.5"/></symbol>
+  <symbol id="i-pokal" viewBox="0 0 24 24"><path d="M7 4.5h10v5a5 5 0 0 1-10 0zM7 6.5H4v1.5a3 3 0 0 0 3 3M17 6.5h3v1.5a3 3 0 0 1-3 3M12 14.5V18M8.5 20.5h7"/></symbol>
+  <symbol id="i-auge" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-stern" viewBox="0 0 24 24"><path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z"/></symbol>
+</svg>
+<div class="band" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
 <main>
-  <h1>🎮 Tafel-Spiele</h1>
+  <h1><svg class="symbol"><use href="#i-spiel"/></svg> Tafel-Spiele</h1>
   <p>Spiele für die liegende Tafel, gesteuert mit den iPads: Scooter, Fußball, Hockey, Lichtspur und Münzjagd.</p>
   <div class="row">
-    <a href="board.html">🖥️ Tafel starten<small>auf der großen Tafel öffnen</small></a>
-    <a href="play.html">📱 Mitspielen<small>auf dem iPad öffnen (oder QR-Code scannen)</small></a>
+    <a href="board.html"><svg class="symbol"><use href="#i-tafel"/></svg> Tafel starten<small>auf der großen Tafel öffnen</small></a>
+    <a href="play.html"><svg class="symbol"><use href="#i-tablet"/></svg> Mitspielen<small>auf dem iPad öffnen (oder QR-Code scannen)</small></a>
   </div>
 </main>
 </body>

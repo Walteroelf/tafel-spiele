@@ -44,7 +44,7 @@
   const fmt=s=>{ s=Math.max(0,Math.ceil(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
 
   GAMES.push({
-    id:'fire',name:'Feuerwehr',icon:'🚒',holdT:true,turboLabel:'💧 WASSER',coop:true,
+    id:'fire',name:'Feuerwehr',icon:'🚒',holdT:true,turboLabel:'WASSER',coop:true,
     desc:'Gemeinsam Brände löschen, bevor es zu viele werden!',
     hint:'WASSER halten zum Löschen – in der Mitte nachfüllen!',
     targets:[1,2,3],defTarget:1,targetLabel:'Siege bis',
