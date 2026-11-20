@@ -474,6 +474,26 @@ function drawBadge(seat,p){
   ctx.restore();
 }
 
+// Linien-Symbole (24x24, Strich 2.2) statt Emojis
+const ICON_PATHS={
+  scooter:['M3 14l2-5h14l2 5v4H3z','M7 18v2M17 18v2','M7 14h.01M17 14h.01'],
+  soccer:['M12 3a9 9 0 100 18 9 9 0 000-18z','M12 8l3.5 2.5-1.3 4h-4.4l-1.3-4z','M12 3v5M15.5 10.5L20 9M14.2 14.5L17 18M9.8 14.5L7 18M8.5 10.5L4 9'],
+  hockey:['M6 3l9 13','M15 16h5v3h-7','M5 20h.01'],
+  tron:['M3 18h5l4-8h4l3 8h2','M12 10V6h4','M3 21h18'],
+  coins:['M12 3a9 9 0 100 18 9 9 0 000-18z','M12 7v10M9.5 9.5c0-1.2 1.2-2 2.5-2s2.5.8 2.5 2c0 3-5 1.5-5 4.5 0 1.200 1.200 2 2.500 2s2.500-.8 2.500-2'],
+  pong:['M4 8v8','M20 8v8','M12 12h.01','M8 5h8M8 19h8'],
+  paint:['M12 3C7 3 3 7 3 12s4 9 9 9c2 0 2-2 1-3s0-3 2-3h3c2 0 3-1 3-3 0-4-4-7-9-7z','M8 11h.01M12 8h.01M16 11h.01'],
+  sheep:['M7 10a4 4 0 017-2 4 4 0 014 3 3 3 0 011 5H7a4 4 0 010-6z','M8 16v4M16 16v4','M5 12l-2 1'],
+  fire:['M12 3c1 4 5 6 5 11a5 5 0 01-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-6 1-10z'],
+  territory:['M4 4h8v8H4z','M12 12h8v8h-8z','M12 4h8v8','M4 12v8h8']
+};
+function drawIcon(id,x,y,size,color){
+  const P=ICON_PATHS[id]; if(!P) return;
+  ctx.save(); ctx.translate(x-size/2,y-size/2); ctx.scale(size/24,size/24);
+  ctx.strokeStyle=color||'#0D2B4E'; ctx.lineWidth=2.2; ctx.lineCap='round'; ctx.lineJoin='round';
+  for(const d of P) ctx.stroke(new Path2D(d));
+  ctx.restore();
+}
 function drawLobby(){
   ctx.save();
   rrect(ctx,400,95,800,710,28); ctx.fillStyle='#23598D'; ctx.fill();
@@ -484,8 +504,9 @@ function drawLobby(){
   GAMES.forEach((g,i)=>{
     const row=Math.floor(i/per), inRow=Math.min(per,GAMES.length-row*per), col=i-row*per;
     const x=CX+(col-(inRow-1)/2)*150, y=196+row*90;
-    button(x,y,144,82,g.icon+'\n'+g.name,()=>{ selectGame(g); beep(600,.06,'triangle'); },
+    button(x,y,144,82,'\n'+g.name,()=>{ selectGame(g); beep(600,.06,'triangle'); },
       {fill:g===game?'#4DB2E6':'#DCE7F0',sel:g===game,font:32});
+    drawIcon(g.id,x,y-14,34);
   });
   const rows=Math.ceil(GAMES.length/per), yb=196+(rows-1)*90+41;     // Unterkante der Spielwahl
   text(game.desc,CX,yb+26,20,'#D6E7F5','600');

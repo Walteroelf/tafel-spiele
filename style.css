@@ -1,0 +1,76 @@
+@font-face{font-family:"Andika";font-weight:400;font-display:swap;src:url("schriften/andika-400.woff2") format("woff2")}
+@font-face{font-family:"Andika";font-weight:700;font-display:swap;src:url("schriften/andika-700.woff2") format("woff2")}
+.band{display:flex;height:12px;flex:none}
+.band i{flex:1}
+  body>.band{position:fixed;top:0;left:0;right:0;z-index:9;pointer-events:none}
+.band i:nth-child(1){background:var(--hellblau)}.band i:nth-child(2){background:var(--blau)}
+.band i:nth-child(3){background:var(--gruen)}.band i:nth-child(4){background:var(--hellgruen)}
+.band i:nth-child(5){background:var(--gelb)}.band i:nth-child(6){background:var(--orange)}
+.band i:nth-child(7){background:var(--silber)}
+.sprite{position:absolute;width:0;height:0;overflow:hidden}
+  :root{--c:#4DB2E6;--bg:var(--hg);--card:var(--karte);--txt:var(--text);--mute:var(--leise)}
+  .symbol{width:1em;height:1em}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:var(--schrift);
+    overflow:hidden;position:fixed;inset:0;width:100%;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none}
+  .screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+    padding:max(16px,env(safe-area-inset-top)) 20px max(16px,env(safe-area-inset-bottom));text-align:center;gap:14px}
+  .screen.on{display:flex}
+  h1{margin:0;font-size:clamp(28px,6vw,56px)}
+  p{margin:0;color:var(--mute);font-size:clamp(15px,2.4vw,22px);max-width:640px}
+  input{font:inherit;font-size:44px;text-transform:uppercase;text-align:center;letter-spacing:.3em;width:6.5em;
+    padding:10px;border-radius:16px;border:3px solid var(--rand);background:var(--card);color:var(--txt);
+    -webkit-user-select:text;user-select:text;touch-action:auto}
+  button{font:inherit;color:var(--dunkelblau);border:0;border-radius:20px;background:var(--hellblau);padding:14px 22px;font-size:clamp(18px,3vw,28px);
+    font-weight:700;touch-action:none}
+  button.big{background:var(--gruen);font-size:clamp(24px,4vw,40px);padding:16px 44px}
+  .seg{display:flex;gap:12px}
+  .seg{flex-wrap:wrap;justify-content:center}
+  .seg button{border:4px solid transparent;min-width:min(30vw,210px)}
+  .seg button{background:var(--karte);color:var(--text);border-color:var(--rand)}
+  .seg button.sel{border-color:var(--dunkelblau);background:var(--hellblau);color:var(--dunkelblau)}
+  #setup{background:var(--bg)}
+  #badge{display:inline-block;padding:6px 22px;border-radius:999px;background:var(--c);color:var(--dunkelblau);font-weight:900}
+  #note{min-height:1.4em;color:var(--hinweis-text)}
+  #sensBox{display:flex;flex-direction:column;align-items:center;gap:8px;width:min(92vw,520px)}
+  #sensRow{display:flex;align-items:center;gap:14px}
+  #sensRow button{width:64px;height:64px;padding:0;font-size:36px;border-radius:50%}
+  #sensDots{font-size:30px;letter-spacing:.12em;min-width:5.6em;color:var(--c)}
+  #sensLbl{font-size:clamp(14px,2.4vw,18px);color:var(--mute)}
+  #meter{position:relative;width:100%;height:22px;border-radius:11px;background:var(--flaeche-2)}
+  #meterKnob{position:absolute;top:2px;left:50%;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:var(--c);border:2px solid var(--dunkelblau)}
+  #meter::after{content:"";position:absolute;left:50%;top:-3px;width:2px;height:28px;background:var(--text);opacity:.5}
+
+  /* Steuerfläche */
+  #pad{flex-direction:row;align-items:stretch;justify-content:stretch;padding:0;gap:0;border:10px solid var(--c)}
+  #left,#right{flex:1;position:relative;display:flex}
+  #left{align-items:center;justify-content:center;background:var(--flaeche-2);border-right:2px solid var(--linie)}
+  #right{padding:16px;gap:16px;background:var(--karte)}
+  .pedal{flex:1;border-radius:28px;font-size:clamp(26px,5vw,56px);font-weight:900;letter-spacing:.04em;
+    background:var(--gruen);border:4px solid var(--dunkelblau);color:var(--dunkelblau)}
+  #turbo{background:var(--gelb)} #rev{background:var(--orange)}
+  .pedal.down{background:var(--c);color:var(--dunkelblau);border-color:var(--text)}
+  #gas{flex:2}
+  #col{flex:1;display:flex;flex-direction:column;gap:16px}
+  #turbo.cool{opacity:.35}
+  #knobTrack{position:absolute;left:8%;right:8%;top:50%;height:14px;margin-top:-7px;border-radius:7px;background:var(--linie)}
+  #knob{position:absolute;top:50%;left:50%;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;background:var(--c);
+    border:4px solid var(--dunkelblau)}
+  #steerHint{position:absolute;bottom:12%;left:0;right:0;color:var(--mute);font-size:clamp(14px,2.2vw,20px)}
+  #tilt{display:none;flex-direction:column;align-items:center;gap:18px}
+  #wheel{width:min(30vh,34vw);height:min(30vh,34vw);border-radius:50%;border:14px solid var(--c);position:relative;transition:transform .05s linear}
+  #wheel::after{content:"";position:absolute;top:-14px;left:50%;width:14px;height:34px;margin-left:-7px;background:var(--text);border-radius:4px}
+  #banner{position:absolute;top:10px;left:0;right:0;text-align:center;font-weight:800;font-size:clamp(18px,3vw,30px);
+    pointer-events:none}
+  #gear{position:absolute;top:10px;right:10px;width:54px;height:54px;padding:0;border-radius:50%;font-size:26px;background:var(--hellblau);color:var(--dunkelblau);z-index:3}
+  body.tilt #knobTrack,body.tilt #knob,body.tilt #steerHint{display:none}
+  body.tilt #tilt{display:flex}
+  body.nogas #gas,body.nogas #rev,body.joy #gas,body.joy #rev{display:none}
+  body.nogas #col,body.joy #col{flex:1}
+  body.nogas #turbo,body.joy #turbo{flex:1}
+  body.joy #knobTrack,body.joy #knob{display:none}
+  body.nopedals #right{display:none}
+  #joyBase{position:absolute;width:200px;height:200px;border-radius:50%;border:6px solid var(--c);background:var(--flaeche-2);
+    display:none;pointer-events:none}
+  #joyKnob{position:absolute;left:60px;top:60px;width:80px;height:80px;border-radius:50%;background:var(--c);border:4px solid var(--dunkelblau)}
