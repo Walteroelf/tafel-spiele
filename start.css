@@ -1,0 +1,22 @@
+@font-face{font-family:"Andika";font-weight:400;font-display:swap;src:url("schriften/andika-400.woff2") format("woff2")}
+@font-face{font-family:"Andika";font-weight:700;font-display:swap;src:url("schriften/andika-700.woff2") format("woff2")}
+.band{display:flex;height:12px;flex:none}
+.band i{flex:1}
+.band i:nth-child(1){background:var(--hellblau)}.band i:nth-child(2){background:var(--blau)}
+.band i:nth-child(3){background:var(--gruen)}.band i:nth-child(4){background:var(--hellgruen)}
+.band i:nth-child(5){background:var(--gelb)}.band i:nth-child(6){background:var(--orange)}
+.band i:nth-child(7){background:var(--silber)}
+.sprite{position:absolute;width:0;height:0;overflow:hidden}
+  :root{--bg:var(--hg);--card:var(--karte);--txt:var(--text);--mute:var(--leise)}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:var(--schrift)}
+  main{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:24px;text-align:center}
+  h1{margin:0;font-size:clamp(32px,7vw,64px)}
+  p{margin:0;color:var(--mute);font-size:clamp(16px,2.5vw,22px);max-width:620px}
+  .row{display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
+  a{display:block;padding:26px 34px;border-radius:24px;background:var(--card);color:var(--txt);text-decoration:none;
+    font-size:clamp(20px,3.5vw,32px);font-weight:800;border:3px solid var(--rand);min-width:min(78vw,300px)}
+  a small{display:block;font-weight:500;font-size:.55em;color:var(--mute);margin-top:6px}
+  a:hover{background:var(--hellblau);color:var(--dunkelblau);border-color:var(--dunkelblau)}
+  a:hover small{color:var(--dunkelblau)}
+  a .symbol{width:1em;height:1em}
+  h1 .symbol{width:.9em;height:.9em}

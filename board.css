@@ -1,0 +1,5 @@
+@font-face{font-family:"Andika";font-weight:400;font-display:swap;src:url("schriften/andika-400.woff2") format("woff2")}
+  @font-face{font-family:"Andika";font-weight:700;font-display:swap;src:url("schriften/andika-700.woff2") format("woff2")}
+  html,body{margin:0;position:fixed;inset:0;width:100%;height:100%;background:#0D2B4E;overflow:hidden;touch-action:none;-webkit-touch-callout:none;
+    -webkit-user-select:none;user-select:none}
+  canvas{display:block;position:fixed;inset:0;width:100%;height:100%;touch-action:none}
