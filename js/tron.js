@@ -13,7 +13,7 @@
     glowL=mkLayer(W,H); coreL=mkLayer(W,H);
     for(const L of [glowL,coreL]){ L.x.lineCap='round'; L.x.lineJoin='round'; }
   }
-  const BG=[7,11,24];
+  const BG=[19,55,96];
   function soft(hex,k){   // Farbe mit dem Hintergrund mischen (deckend statt transparent, damit sich nichts aufaddiert)
     const n=parseInt(hex.slice(1),16), r=n>>16&255, g=n>>8&255, b=n&255;
     return 'rgb('+Math.round(BG[0]+(r-BG[0])*k)+','+Math.round(BG[1]+(g-BG[1])*k)+','+Math.round(BG[2]+(b-BG[2])*k)+')';
@@ -66,7 +66,7 @@
     const c=p.car; if(c.dead) return;
     c.dead=true; c.deadT=0; c.trail=[]; needRebuild=true;
     clearOwner(p.seat+1);
-    sparks(c.x,c.y,36,p.color); sparks(c.x,c.y,12,'#fff');
+    sparks(c.x,c.y,36,p.color); sparks(c.x,c.y,12,'#E8F1F8');
     shake=Math.max(shake,8); beep(200,.4,'sawtooth',.1,-150);
   }
 
@@ -83,7 +83,7 @@
   }
 
   const g={
-    id:'tron',name:'Lichtspur',icon:'🏍️',noGas:true,
+    id:'tron',name:'Lichtspur',noGas:true,
     desc:'Du fährst immer vorwärts und ziehst eine Spur. Nicht berühren!',
     hint:'Nur lenken! Wand und Spuren sind tödlich. TURBO = Spurt',
     targets:[1,3,5],defTarget:3,
@@ -129,8 +129,8 @@
         const alive=list.filter(p=>!p.car.dead);
         if(list.length>=2&&alive.length<=1){
           const w=alive[0];
-          return w?{winners:[w],text:'🏆 '+cname(w.seat).toUpperCase()+' gewinnt die Runde!',color:w.color}
-                  :{winners:[],text:'Alle raus – Unentschieden',color:'#fff'};
+          return w?{winners:[w],text:''+cname(w.seat).toUpperCase()+' gewinnt die Runde!',color:w.color}
+                  :{winners:[],text:'Alle raus – Unentschieden',color:'#E8F1F8'};
         }
         if(list.length===1&&list[0].car.dead&&list[0].car.deadT>1){   // allein üben
           grid=new Uint8Array(GW*GH); clearLayers(); list[0].car=withStart(spawn(list[0]));
@@ -138,15 +138,15 @@
       }
     },
     draw(){
-      ctx.fillStyle='#03050a'; ctx.fillRect(0,0,W,H);
-      ctx.fillStyle='#070b18'; ctx.fillRect(FX0,FY0,FX1-FX0,FY1-FY0);
-      ctx.strokeStyle='rgba(80,180,255,.10)'; ctx.lineWidth=1;
+      ctx.fillStyle='#0D2B4E'; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='#133760'; ctx.fillRect(FX0,FY0,FX1-FX0,FY1-FY0);
+      ctx.strokeStyle='rgba(77,178,230,.12)'; ctx.lineWidth=1;
       for(let x=FX0;x<=FX1;x+=40){ ctx.beginPath(); ctx.moveTo(x,FY0); ctx.lineTo(x,FY1); ctx.stroke(); }
       for(let y=FY0;y<=FY1;y+=40){ ctx.beginPath(); ctx.moveTo(FX0,y); ctx.lineTo(FX1,y); ctx.stroke(); }
       // Leuchtender Rand: halbtransparente Linien statt shadowBlur
-      ctx.strokeStyle='#38bdf8'; ctx.globalAlpha=.10;
+      ctx.strokeStyle='#4DB2E6'; ctx.globalAlpha=.10;
       for(const w of [22,14]){ ctx.lineWidth=w; ctx.strokeRect(FX0,FY0,FX1-FX0,FY1-FY0); }
-      ctx.globalAlpha=1; ctx.lineWidth=6; ctx.strokeStyle='#7dd3fc'; ctx.strokeRect(FX0,FY0,FX1-FX0,FY1-FY0);
+      ctx.globalAlpha=1; ctx.lineWidth=6; ctx.strokeStyle='#B5E2FC'; ctx.strokeRect(FX0,FY0,FX1-FX0,FY1-FY0);
       if(glowL){ ctx.drawImage(glowL.c,0,0,W,H); ctx.drawImage(coreL.c,0,0,W,H); }
       ctx.lineCap='round';
       for(const p of present()){   // letztes Stück bis zum Kopf
@@ -160,7 +160,7 @@
         const c=p.car; if(!c||c.dead) continue;
         ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.a);
         ctx.globalAlpha=.3; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(0,0,c.boostT>0?26:17,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
-        ctx.fillStyle='#fff'; ctx.beginPath(); ctx.moveTo(14,0); ctx.lineTo(-9,-9); ctx.lineTo(-5,0); ctx.lineTo(-9,9); ctx.closePath(); ctx.fill();
+        ctx.fillStyle='#E8F1F8'; ctx.beginPath(); ctx.moveTo(14,0); ctx.lineTo(-9,-9); ctx.lineTo(-5,0); ctx.lineTo(-9,9); ctx.closePath(); ctx.fill();
         ctx.lineWidth=3; ctx.strokeStyle=p.color; ctx.stroke();
         ctx.restore();
       }
