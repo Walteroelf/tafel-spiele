@@ -55,14 +55,14 @@
   const fmt=s=>{ s=Math.max(0,Math.ceil(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
 
   GAMES.push({
-    id:'paint',name:'Farbe',icon:'🎨',
+    id:'paint',name:'Farbe',
     desc:'Male den Boden in deiner Farbe. Wer am Ende am meisten hat, gewinnt!',
     hint:'Fahre überall hin und male den Boden an – TURBO malt breit!',
     targets:[1,3,5],defTarget:3,
     options:[{key:'dauer',label:'Dauer',values:[['45','45 s'],['60','60 s'],['90','90 s']],def:'60'}],
     bot,playT:()=>playTime,
     teardown(){ layerO=null; lx=null; },
-    hudExtra:p=>'🎨 '+pct(p)+'%',
+    hudExtra:p=>'Farbe '+pct(p)+'%',
     startRound(){
       grid.fill(-1); counts.fill(0); playTime=0; timeLeft=+opt('dauer');
       ensureLayer(); lx.clearRect(0,0,W,H);
@@ -85,22 +85,22 @@
       if(timeLeft<=0){
         const max=list.reduce((m,p)=>Math.max(m,counts[p.seat]),0);
         const w=max>0?list.filter(p=>counts[p.seat]===max):[];
-        const text=!w.length?'Niemand hat gemalt':(w.length===1?'🎨 '+cname(w[0].seat).toUpperCase()+' gewinnt mit '+pct(w[0])+' %!':'Gleichstand mit '+pct(w[0])+' %');
-        return {winners:w,text,color:w.length===1?w[0].color:'#ffd24a'};
+        const text=!w.length?'Niemand hat gemalt':(w.length===1?''+cname(w[0].seat).toUpperCase()+' gewinnt mit '+pct(w[0])+' %!':'Gleichstand mit '+pct(w[0])+' %');
+        return {winners:w,text,color:w.length===1?w[0].color:'#FFD100'};
       }
     },
     draw(){
-      ctx.fillStyle='#03050a'; ctx.fillRect(0,0,W,H);
-      rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,40); ctx.fillStyle='#161d2e'; ctx.fill();
+      ctx.fillStyle='#0D2B4E'; ctx.fillRect(0,0,W,H);
+      rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,40); ctx.fillStyle='#164170'; ctx.fill();
       ctx.save(); rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,40); ctx.clip();
       ctx.strokeStyle='rgba(255,255,255,.05)'; ctx.lineWidth=2;
       for(let x=FX0;x<=FX1;x+=80){ ctx.beginPath(); ctx.moveTo(x,FY0); ctx.lineTo(x,FY1); ctx.stroke(); }
       for(let y=FY0;y<=FY1;y+=80){ ctx.beginPath(); ctx.moveTo(FX0,y); ctx.lineTo(FX1,y); ctx.stroke(); }
       ctx.globalAlpha=.88; if(layerO) ctx.drawImage(layerO.c,0,0,W,H); ctx.globalAlpha=1;
       ctx.restore();
-      ctx.lineWidth=10; ctx.strokeStyle='#f5c518'; rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,40); ctx.stroke();
+      ctx.lineWidth=10; ctx.strokeStyle='#FFD100'; rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,40); ctx.stroke();
       for(const p of present()) drawCar(p);
-      text(fmt(timeLeft),CX,FY0+44,56,timeLeft<=10?'#ff6b5a':'#fff','900');
+      text(fmt(timeLeft),CX,FY0+44,56,timeLeft<=10?'#F39200':'#E8F1F8','900');
     },
   });
 })();

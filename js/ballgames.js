@@ -53,7 +53,7 @@
       }
       for(const p of list){
         const v=collideCircles(p.car,ball,R(),ball.r,cfg.ballE);
-        if(v>40){ if(bumpCd<=0){beep(cfg.kickHz,.08,'triangle',.12,-40);bumpCd=.08;} sparks(ball.x,ball.y,Math.min(8,Math.floor(v/50)),'#fff'); }
+        if(v>40){ if(bumpCd<=0){beep(cfg.kickHz,.08,'triangle',.12,-40);bumpCd=.08;} sparks(ball.x,ball.y,Math.min(8,Math.floor(v/50)),'#E8F1F8'); }
       }
       // Ball bewegen
       ball.x+=ball.vx*dt; ball.y+=ball.vy*dt;
@@ -80,23 +80,23 @@
       if(ph==='play'&&scoredSide>=0){
         const t=scoredSide===0?1:0;   // Ball im linken Tor -> Team Rechts trifft
         sparks(ball.x,ball.y,30,TEAMS[t].color);
-        return {winners:teamPlayers(t),text:'⚽ Tor für Team '+TEAMS[t].name+'!',color:TEAMS[t].color};
+        return {winners:teamPlayers(t),text:'Tor für Team '+TEAMS[t].name+'!',color:TEAMS[t].color};
       }
     }
 
     function drawField(){
-      ctx.fillStyle='#05070d'; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='#0D2B4E'; ctx.fillRect(0,0,W,H);
       // Tore (Taschen hinter der Linie)
       for(const side of [0,1]){
         const x=side===0?FX0-70:FX1, col=TEAMS[side].color;
-        ctx.fillStyle='#0b0e17'; ctx.fillRect(x,CY-gh/2,70,gh);
+        ctx.fillStyle='#0A2342'; ctx.fillRect(x,CY-gh/2,70,gh);
         ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1;
         for(let i=0;i<=70;i+=14){ ctx.beginPath(); ctx.moveTo(x+i,CY-gh/2); ctx.lineTo(x+i,CY+gh/2); ctx.stroke(); }
         for(let j=0;j<=gh;j+=14){ ctx.beginPath(); ctx.moveTo(x,CY-gh/2+j); ctx.lineTo(x+70,CY-gh/2+j); ctx.stroke(); }
         ctx.lineWidth=8; ctx.strokeStyle=col; ctx.strokeRect(x+(side===0?4:-4),CY-gh/2,70,gh);
       }
       if(cfg.skin==='grass'){
-        const g=ctx.createLinearGradient(FX0,0,FX1,0); g.addColorStop(0,'#2e8b3d'); g.addColorStop(1,'#2e8b3d');
+        const g=ctx.createLinearGradient(FX0,0,FX1,0); g.addColorStop(0,'#46A84A'); g.addColorStop(1,'#46A84A');
         ctx.fillStyle=g; ctx.fillRect(FX0,FY0,FX1-FX0,FY1-FY0);
         ctx.fillStyle='rgba(255,255,255,.05)';
         for(let i=0;i<10;i+=2) ctx.fillRect(FX0+i*(FX1-FX0)/10,FY0,(FX1-FX0)/10,FY1-FY0);
@@ -106,39 +106,39 @@
         ctx.beginPath(); ctx.arc(CX,CY,110,0,Math.PI*2); ctx.stroke();
         ctx.strokeRect(FX0,CY-210,170,420); ctx.strokeRect(FX1-170,CY-210,170,420);
       } else {
-        const g=ctx.createLinearGradient(0,FY0,0,FY1); g.addColorStop(0,'#d7ecf8'); g.addColorStop(1,'#a9cde4');
+        const g=ctx.createLinearGradient(0,FY0,0,FY1); g.addColorStop(0,'#DDF0FB'); g.addColorStop(1,'#B5E2FC');
         rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,60); ctx.fillStyle=g; ctx.fill();
         ctx.save(); rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,60); ctx.clip();
-        ctx.lineWidth=8; ctx.strokeStyle='#e0463a'; ctx.beginPath(); ctx.moveTo(CX,FY0); ctx.lineTo(CX,FY1); ctx.stroke();
-        ctx.lineWidth=5; ctx.strokeStyle='#3b6fd6';
+        ctx.lineWidth=8; ctx.strokeStyle='#F39200'; ctx.beginPath(); ctx.moveTo(CX,FY0); ctx.lineTo(CX,FY1); ctx.stroke();
+        ctx.lineWidth=5; ctx.strokeStyle='#4DB2E6';
         ctx.beginPath(); ctx.moveTo(CX-250,FY0); ctx.lineTo(CX-250,FY1); ctx.moveTo(CX+250,FY0); ctx.lineTo(CX+250,FY1); ctx.stroke();
-        ctx.strokeStyle='#e0463a'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(CX,CY,95,0,Math.PI*2); ctx.stroke();
+        ctx.strokeStyle='#F39200'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(CX,CY,95,0,Math.PI*2); ctx.stroke();
         for(const t of [0,1]){ ctx.beginPath(); ctx.arc(t===0?FX0:FX1,CY,gh/2+10,0,Math.PI*2); ctx.stroke(); }
         ctx.restore();
-        ctx.lineWidth=10; ctx.strokeStyle='#2a3350'; rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,60); ctx.stroke();
+        ctx.lineWidth=10; ctx.strokeStyle='#2F6AA3'; rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,60); ctx.stroke();
       }
       // Torlinien-Lücke zeichnen (Tor-Öffnung)
-      ctx.fillStyle=cfg.skin==='grass'?'rgba(0,0,0,.25)':'rgba(30,40,70,.25)';
+      ctx.fillStyle=cfg.skin==='grass'?'rgba(13,43,78,.25)':'rgba(13,43,78,.25)';
       ctx.fillRect(FX0-4,CY-gh/2,8,gh); ctx.fillRect(FX1-4,CY-gh/2,8,gh);
       // Pfosten
       for(const x of [FX0,FX1]) for(const y of [CY-gh/2,CY+gh/2]){
-        ctx.beginPath(); ctx.arc(x,y,9,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill(); ctx.lineWidth=3; ctx.strokeStyle='#222'; ctx.stroke();
+        ctx.beginPath(); ctx.arc(x,y,9,0,Math.PI*2); ctx.fillStyle='#E8F1F8'; ctx.fill(); ctx.lineWidth=3; ctx.strokeStyle='#0D2B4E'; ctx.stroke();
       }
     }
     function drawBall(){
       const r=ball.r;
-      ctx.fillStyle='rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(ball.x+4,ball.y+6,r,r*.9,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(13,43,78,.3)'; ctx.beginPath(); ctx.ellipse(ball.x+4,ball.y+6,r,r*.9,0,0,Math.PI*2); ctx.fill();
       if(cfg.skin==='grass'){
-        ctx.beginPath(); ctx.arc(ball.x,ball.y,r,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
-        ctx.lineWidth=3; ctx.strokeStyle='#222'; ctx.stroke();
+        ctx.beginPath(); ctx.arc(ball.x,ball.y,r,0,Math.PI*2); ctx.fillStyle='#E8F1F8'; ctx.fill();
+        ctx.lineWidth=3; ctx.strokeStyle='#0D2B4E'; ctx.stroke();
         const a=Math.atan2(ball.vy,ball.vx)+performance.now()/400*Math.min(1,Math.hypot(ball.vx,ball.vy)/200);
-        ctx.fillStyle='#222';
+        ctx.fillStyle='#0D2B4E';
         for(let i=0;i<5;i++){ const t=a+i*Math.PI*2/5; ctx.beginPath(); ctx.arc(ball.x+Math.cos(t)*r*.55,ball.y+Math.sin(t)*r*.55,r*.2,0,Math.PI*2); ctx.fill(); }
         ctx.beginPath(); ctx.arc(ball.x,ball.y,r*.25,0,Math.PI*2); ctx.fill();
       } else {
-        ctx.beginPath(); ctx.arc(ball.x,ball.y,r,0,Math.PI*2); ctx.fillStyle='#15161c'; ctx.fill();
-        ctx.lineWidth=5; ctx.strokeStyle='#e0463a'; ctx.stroke();
-        ctx.beginPath(); ctx.arc(ball.x,ball.y,r*.45,0,Math.PI*2); ctx.fillStyle='#2b2e3a'; ctx.fill();
+        ctx.beginPath(); ctx.arc(ball.x,ball.y,r,0,Math.PI*2); ctx.fillStyle='#0D2B4E'; ctx.fill();
+        ctx.lineWidth=5; ctx.strokeStyle='#F39200'; ctx.stroke();
+        ctx.beginPath(); ctx.arc(ball.x,ball.y,r*.45,0,Math.PI*2); ctx.fillStyle='#0D2B4E'; ctx.fill();
       }
     }
     function draw(){
@@ -149,7 +149,7 @@
       // Spielstand
       ctx.save(); ctx.globalAlpha=.9;
       text(String(teamScore(0)),CX-70,FY0+42,56,TEAMS[0].color,'900');
-      text(':',CX,FY0+38,52,'#fff','900');
+      text(':',CX,FY0+38,52,'#E8F1F8','900');
       text(String(teamScore(1)),CX+70,FY0+42,56,TEAMS[1].color,'900');
       ctx.restore();
     }
@@ -166,14 +166,14 @@
   }
 
   GAMES.push(make({
-    id:'soccer',name:'Fußball',icon:'⚽',
+    id:'soccer',name:'Fußball',
     desc:'Zwei Teams: Schießt den Ball ins gegnerische Tor!',
     hint:'Links gegen Rechts – Ball ins gegnerische Tor!',
     skin:'grass',carR:22,carM:1.5,ballR:28,ballDrag:.55,ballE:.75,wallE:.7,ballMax:800,goalH:280,spawnX:260,
     kickHz:240,carP:{}
   }));
   GAMES.push(make({
-    id:'hockey',name:'Hockey',icon:'🏒',
+    id:'hockey',name:'Hockey',
     desc:'Air-Hockey: Jeder bleibt in seiner Hälfte und schießt den Puck ins Tor.',
     hint:'Bleib in deiner Hälfte – Puck ins gegnerische Tor!',
     skin:'ice',carR:34,carM:5,ballR:20,ballDrag:.12,ballE:1,wallE:.96,ballMax:1100,goalH:240,spawnX:200,halves:true,

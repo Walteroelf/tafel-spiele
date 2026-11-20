@@ -121,7 +121,7 @@
     const c=p.car; if(!c||c.dead) return;
     for(const i of c.trail) trailGrid[i]=0;
     c.trail=[]; c.dead=true;
-    sparks(c.x,c.y,30,p.color); sparks(c.x,c.y,10,'#fff'); shake=Math.max(shake,6); beep(220,.35,'sawtooth',.09,-150);
+    sparks(c.x,c.y,30,p.color); sparks(c.x,c.y,10,'#E8F1F8'); shake=Math.max(shake,6); beep(220,.35,'sawtooth',.09,-150);
     if(opt('raus')==='raus'){
       c.out=true;
       for(let i=0;i<TOTAL;i++) if(grid[i]===p.seat) setOwner(i,-1);
@@ -225,7 +225,7 @@
   const fmt=s=>{ s=Math.max(0,Math.ceil(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
 
   GAMES.push({
-    id:'territory',name:'Gebiet',icon:'🗺️',noGas:true,
+    id:'territory',name:'Gebiet',noGas:true,
     desc:'Raus aus deinem Gebiet und zurück – die Fläche dazwischen gehört dir! Regeln einstellbar.',
     hint:'Raus aus deinem Gebiet und wieder zurück: Die Fläche dazwischen wird deine!',
     targets:[1,3,5],defTarget:3,
@@ -236,7 +236,7 @@
     ],
     bot,playT:()=>playTime,
     teardown(){ terrO=null; tx=null; },
-    hudExtra:p=>'🗺️ '+pct(p)+'%',
+    hudExtra:p=>'Gebiet '+pct(p)+'%',
     startRound(){
       ensureTerr(); grid.fill(-1); trailGrid.fill(0); counts.fill(0); dirty=[]; tx.clearRect(0,0,W,H);
       playTime=0; timeLeft=+opt('dauer');
@@ -256,21 +256,21 @@
       const aliveList=list.filter(p=>!p.car.out);
       if(list.length>=2&&aliveList.length<=1){
         const w=aliveList[0];
-        return w?{winners:[w],text:'🏆 '+cname(w.seat).toUpperCase()+' bleibt als Einzige übrig!',color:w.color}
-                :{winners:[],text:'Alle raus – Unentschieden',color:'#fff'};
+        return w?{winners:[w],text:''+cname(w.seat).toUpperCase()+' bleibt als Einzige übrig!',color:w.color}
+                :{winners:[],text:'Alle raus – Unentschieden',color:'#E8F1F8'};
       }
       if(timeLeft<=0){
         const max=list.reduce((m,p)=>Math.max(m,counts[p.seat]),0);
         const w=max>0?list.filter(p=>counts[p.seat]===max):[];
-        const text=!w.length?'Niemand hat Gebiet':(w.length===1?'🗺️ '+cname(w[0].seat).toUpperCase()+' gewinnt mit '+pct(w[0])+' %!':'Gleichstand mit '+pct(w[0])+' %');
-        return {winners:w,text,color:w.length===1?w[0].color:'#ffd24a'};
+        const text=!w.length?'Niemand hat Gebiet':(w.length===1?''+cname(w[0].seat).toUpperCase()+' gewinnt mit '+pct(w[0])+' %!':'Gleichstand mit '+pct(w[0])+' %');
+        return {winners:w,text,color:w.length===1?w[0].color:'#FFD100'};
       }
     },
     draw(){
-      ctx.fillStyle='#03050a'; ctx.fillRect(0,0,W,H);
-      rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,24); ctx.fillStyle='#e9edf3'; ctx.fill();
+      ctx.fillStyle='#0D2B4E'; ctx.fillRect(0,0,W,H);
+      rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,24); ctx.fillStyle='#E8F1F8'; ctx.fill();
       ctx.save(); rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,24); ctx.clip();
-      ctx.strokeStyle='rgba(0,0,0,.06)'; ctx.lineWidth=1;
+      ctx.strokeStyle='rgba(13,43,78,.06)'; ctx.lineWidth=1;
       for(let x=FX0;x<=FX1;x+=40){ ctx.beginPath(); ctx.moveTo(x,FY0); ctx.lineTo(x,FY1); ctx.stroke(); }
       for(let y=FY0;y<=FY1;y+=40){ ctx.beginPath(); ctx.moveTo(FX0,y); ctx.lineTo(FX1,y); ctx.stroke(); }
       ctx.globalAlpha=.78; if(terrO) ctx.drawImage(terrO.c,0,0,W,H); ctx.globalAlpha=1;
@@ -291,10 +291,10 @@
       ctx.lineCap='butt';
       ctx.globalAlpha=1;
       ctx.restore();
-      ctx.lineWidth=10; ctx.strokeStyle='#59627d'; rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,24); ctx.stroke();
+      ctx.lineWidth=10; ctx.strokeStyle='#B9C1C8'; rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,24); ctx.stroke();
       for(const p of present()) drawCar(p,.8);
-      ctx.save(); ctx.globalAlpha=.9; rrect(ctx,CX-80,FY0+12,160,56,16); ctx.fillStyle='rgba(8,10,18,.7)'; ctx.fill();
-      text(fmt(timeLeft),CX,FY0+41,44,timeLeft<=10?'#ff6b5a':'#fff','900'); ctx.restore();
+      ctx.save(); ctx.globalAlpha=.9; rrect(ctx,CX-80,FY0+12,160,56,16); ctx.fillStyle='rgba(13,43,78,.7)'; ctx.fill();
+      text(fmt(timeLeft),CX,FY0+41,44,timeLeft<=10?'#F39200':'#E8F1F8','900'); ctx.restore();
     },
   });
 })();

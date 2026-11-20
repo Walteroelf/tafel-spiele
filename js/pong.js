@@ -66,13 +66,13 @@
     const single=inRound().length<2;
     if(c.lives<=0){
       if(single) c.lives=gameState.pong.opts.leben|0||3;    // allein üben: nie raus
-      else { c.dead=true; sparks(ball.x,ball.y,24,'#fff'); }
+      else { c.dead=true; sparks(ball.x,ball.y,24,'#E8F1F8'); }
     }
     prepServe(1.1);
   }
 
   const g={
-    id:'pong',name:'4er-Pong',icon:'🏓',noPedals:true,rawInput:true,
+    id:'pong',name:'4er-Pong',noPedals:true,rawInput:true,
     desc:'Jede Seite ist ein Tor. Halte den Ball mit deinem Schläger auf!',
     hint:'Schläger nach links/rechts bewegen – lass keinen Ball durch!',
     targets:[1,3,5],defTarget:3,
@@ -80,7 +80,7 @@
     bot,
     dbg:()=>({ball:{x:Math.round(ball.x),y:Math.round(ball.y),vx:Math.round(ball.vx),vy:Math.round(ball.vy),sp:Math.round(ball.sp)},serveT:+serveT.toFixed(2)}),
     playT:()=>playTime,
-    hudExtra:p=>p.car?'❤️ '+Math.max(0,p.car.lives):'',
+    hudExtra:p=>p.car?'Leben '+Math.max(0,p.car.lives):'',
     startRound(){
       playTime=0; mkSides();
       const lives=+opt('leben');
@@ -142,13 +142,13 @@
       const alive2=list.filter(p=>!p.car.dead);
       if(list.length>=2&&alive2.length<=1){
         const w=alive2[0];
-        return w?{winners:[w],text:'🏆 '+cname(w.seat).toUpperCase()+' gewinnt die Runde!',color:w.color}
-                :{winners:[],text:'Unentschieden',color:'#fff'};
+        return w?{winners:[w],text:''+cname(w.seat).toUpperCase()+' gewinnt die Runde!',color:w.color}
+                :{winners:[],text:'Unentschieden',color:'#E8F1F8'};
       }
     },
     draw(){
-      ctx.fillStyle='#03050a'; ctx.fillRect(0,0,W,H);
-      ctx.fillStyle='#0b1226'; ctx.fillRect(AX0,AY0,AX1-AX0,AY1-AY0);
+      ctx.fillStyle='#0D2B4E'; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='#133760'; ctx.fillRect(AX0,AY0,AX1-AX0,AY1-AY0);
       ctx.strokeStyle='rgba(255,255,255,.10)'; ctx.lineWidth=3;
       ctx.beginPath(); ctx.arc(CX,CY,120,0,Math.PI*2); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(CX-30,CY); ctx.lineTo(CX+30,CY); ctx.moveTo(CX,CY-30); ctx.lineTo(CX,CY+30); ctx.stroke();
@@ -156,7 +156,7 @@
       ctx.lineCap='round';
       for(const sd of sides){
         const a=side2xy(sd,0,0), b=side2xy(sd,sd.L,0);
-        ctx.strokeStyle='#59627d'; ctx.lineWidth=12; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+        ctx.strokeStyle='#B9C1C8'; ctx.lineWidth=12; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
         for(const o of sd.owners){
           if(!alive(o)) continue;
           const s0=side2xy(sd,o.lo,0), s1=side2xy(sd,o.hi,0);
@@ -169,18 +169,18 @@
         const c=o.p.car; if(!c||c.dead) continue;
         const a=side2xy(sd,c.u-o.len/2,TH/2), b=side2xy(sd,c.u+o.len/2,TH/2);
         ctx.lineCap='round';
-        ctx.strokeStyle='#fff'; ctx.lineWidth=TH+5; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+        ctx.strokeStyle='#E8F1F8'; ctx.lineWidth=TH+5; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
         ctx.strokeStyle=o.p.color; ctx.lineWidth=TH; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
         ctx.lineCap='butt';
       }
       // Ball mit kurzer Spur
       for(let i=0;i<trail.length;i+=2){
-        ctx.globalAlpha=(i/trail.length)*.35; ctx.fillStyle='#fff';
+        ctx.globalAlpha=(i/trail.length)*.35; ctx.fillStyle='#E8F1F8';
         ctx.beginPath(); ctx.arc(trail[i],trail[i+1],BALL_R*(.4+.6*i/trail.length),0,Math.PI*2); ctx.fill();
       }
       ctx.globalAlpha=1;
-      ctx.beginPath(); ctx.arc(ball.x,ball.y,BALL_R,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
-      ctx.lineWidth=3; ctx.strokeStyle='#ffd24a'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(ball.x,ball.y,BALL_R,0,Math.PI*2); ctx.fillStyle='#E8F1F8'; ctx.fill();
+      ctx.lineWidth=3; ctx.strokeStyle='#FFD100'; ctx.stroke();
     },
   };
   GAMES.push(g);

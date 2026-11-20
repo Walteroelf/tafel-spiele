@@ -60,7 +60,7 @@
   const fmt=s=>{ s=Math.max(0,Math.ceil(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
 
   GAMES.push({
-    id:'sheep',name:'Schafe',icon:'🐑',
+    id:'sheep',name:'Schafe',
     desc:'Treibe die Schafe ins Gehege – gemeinsam oder jeder für sich.',
     hint:'Fahre hinter die Schafe und schiebe sie ins Gehege!',
     targets:[1,2,3],defTarget:1,
@@ -71,7 +71,7 @@
       {key:'schafe',label:'Anzahl',values:[['8','8'],['12','12'],['16','16']],def:'12'},
     ],
     bot,playT:()=>playTime,
-    hudExtra:p=>coopMode()?'🐑 '+lockedCount()+'/'+total:'🐑 '+ownCount(p.seat),
+    hudExtra:p=>coopMode()?'Schafe '+lockedCount()+'/'+total:'Schafe '+ownCount(p.seat),
     startRound(){
       playTime=0; timeLeft=120; total=+opt('schafe');
       buildPens(); spawnSheep();
@@ -117,7 +117,7 @@
         for(const o of sheep){ if(o===s) continue; const ddx=s.x-o.x, ddy=s.y-o.y, dd=Math.hypot(ddx,ddy); if(dd>0&&dd<SR*2){ const push=(SR*2-dd)/2; s.x+=ddx/dd*push; s.y+=ddy/dd*push; } }
         if(ph==='play') for(const pn of pens) if(inPen(pn,s.x,s.y)){
           s.locked=true; s.owner=pn.owner; s.vx=s.vy=0;
-          sparks(s.x,s.y,10,'#fff'); beep(330+Math.random()*60,.18,'triangle',.09,-90);
+          sparks(s.x,s.y,10,'#E8F1F8'); beep(330+Math.random()*60,.18,'triangle',.09,-90);
           break;
         }
       }
@@ -126,45 +126,45 @@
       const done=lockedCount()===sheep.length;
       if(done||timeLeft<=0){
         if(coopMode()){
-          if(done) return {winners:list.slice(),text:'🐑 Alle '+total+' Schafe im Gehege – super!',color:'#7CFC9A'};
-          return {winners:[],text:'Zeit um: '+lockedCount()+' von '+total+' Schafen im Gehege',color:'#ffd24a'};
+          if(done) return {winners:list.slice(),text:'Alle '+total+' Schafe im Gehege – super!',color:'#A6D27A'};
+          return {winners:[],text:'Zeit um: '+lockedCount()+' von '+total+' Schafen im Gehege',color:'#FFD100'};
         }
         const max=list.reduce((m,p)=>Math.max(m,ownCount(p.seat)),0);
         const w=max>0?list.filter(p=>ownCount(p.seat)===max):[];
-        const text=!w.length?'Keine Schafe im Gehege':(w.length===1?'🐑 '+cname(w[0].seat).toUpperCase()+' gewinnt mit '+max+' Schafen!':'Gleichstand mit '+max+' Schafen');
-        return {winners:w,text,color:w.length===1?w[0].color:'#ffd24a'};
+        const text=!w.length?'Keine Schafe im Gehege':(w.length===1?''+cname(w[0].seat).toUpperCase()+' gewinnt mit '+max+' Schafen!':'Gleichstand mit '+max+' Schafen');
+        return {winners:w,text,color:w.length===1?w[0].color:'#FFD100'};
       }
     },
     draw(){
-      ctx.fillStyle='#03050a'; ctx.fillRect(0,0,W,H);
-      rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,40); ctx.fillStyle='#3d8a3a'; ctx.fill();
+      ctx.fillStyle='#0D2B4E'; ctx.fillRect(0,0,W,H);
+      rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,40); ctx.fillStyle='#46A84A'; ctx.fill();
       ctx.save(); rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,40); ctx.clip();
       ctx.fillStyle='rgba(255,255,255,.04)';
       for(let i=0;i<10;i+=2) ctx.fillRect(FX0+i*(FX1-FX0)/10,FY0,(FX1-FX0)/10,FY1-FY0);
       ctx.restore();
-      ctx.lineWidth=10; ctx.strokeStyle='#8a5a2b'; rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,40); ctx.stroke();
+      ctx.lineWidth=10; ctx.strokeStyle='#B9C1C8'; rrect(ctx,FX0,FY0,FX1-FX0,FY1-FY0,40); ctx.stroke();
       // Gehege
       for(const pn of pens){
-        ctx.fillStyle='rgba(120,80,40,.55)'; ctx.strokeStyle=pn.color||'#f5c518'; ctx.lineWidth=8;
+        ctx.fillStyle='rgba(185,193,200,.35)'; ctx.strokeStyle=pn.color||'#FFD100'; ctx.lineWidth=8;
         if(pn.r){ ctx.beginPath(); ctx.arc(pn.x,pn.y,pn.r,0,Math.PI*2); ctx.fill(); ctx.stroke(); }
         else { rrect(ctx,pn.x-pn.hw,pn.y-pn.hh,pn.hw*2,pn.hh*2,14); ctx.fill(); ctx.stroke(); }
       }
       // Schafe
       for(const s of sheep){
         ctx.save(); ctx.translate(s.x,s.y);
-        ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(2,5,SR+2,SR-2,0,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle='#fff';
+        ctx.fillStyle='rgba(13,43,78,.25)'; ctx.beginPath(); ctx.ellipse(2,5,SR+2,SR-2,0,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#E8F1F8';
         for(const [dx,dy] of [[0,0],[-7,-5],[7,-5],[-7,6],[7,6]]){ ctx.beginPath(); ctx.arc(dx,dy,SR*.62,0,Math.PI*2); ctx.fill(); }
-        ctx.rotate(s.face); ctx.fillStyle='#2b2b2b'; ctx.beginPath(); ctx.ellipse(SR*.8,0,6,5,0,0,Math.PI*2); ctx.fill();
+        ctx.rotate(s.face); ctx.fillStyle='#0D2B4E'; ctx.beginPath(); ctx.ellipse(SR*.8,0,6,5,0,0,Math.PI*2); ctx.fill();
         ctx.restore();
         if(s.locked&&s.owner>=0){ ctx.fillStyle=COLORS[s.owner][1]; ctx.beginPath(); ctx.arc(s.x,s.y-SR-3,4,0,Math.PI*2); ctx.fill(); }
       }
       for(const p of present()) drawCar(p);
       if(coopMode()){
-        text(fmt(timeLeft),CX,FY0+44,56,timeLeft<=10?'#ff6b5a':'#fff','900');
-        text('🐑 '+lockedCount()+' / '+total,CX,FY0+92,30,'#fff','800');
+        text(fmt(timeLeft),CX,FY0+44,56,timeLeft<=10?'#F39200':'#E8F1F8','900');
+        text('Schafe '+lockedCount()+' / '+total,CX,FY0+92,30,'#E8F1F8','800');
       } else {   // Einzelmodus: Zeit in die Mitte, weil oben und unten Gehege stehen
-        ctx.save(); ctx.globalAlpha=.55; text(fmt(timeLeft),CX,CY,84,timeLeft<=10?'#ff6b5a':'#fff','900'); ctx.restore();
+        ctx.save(); ctx.globalAlpha=.55; text(fmt(timeLeft),CX,CY,84,timeLeft<=10?'#F39200':'#E8F1F8','900'); ctx.restore();
       }
     },
   });

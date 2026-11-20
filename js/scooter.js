@@ -73,7 +73,7 @@
   function getBg(){
     if(!bgCv||bgCv.ls!==layerScale()){
       bgCv=mkLayer(W,H); const x=bgCv.x;
-      const bg=x.createRadialGradient(CX,CY,100,CX,CY,900); bg.addColorStop(0,'#14192b'); bg.addColorStop(1,'#05070d');
+      const bg=x.createRadialGradient(CX,CY,100,CX,CY,900); bg.addColorStop(0,'#1D4F80'); bg.addColorStop(1,'#0D2B4E');
       x.fillStyle=bg; x.fillRect(0,0,W,H);
     }
     return bgCv.c;
@@ -85,7 +85,7 @@
       floorKey=key; const x=floorCv.x, c=FLOOR/2;
       x.clearRect(0,0,FLOOR,FLOOR);
       const gr=x.createRadialGradient(c,c-60,40,c,c,curR);
-      if(eis){ gr.addColorStop(0,'#b9d9ee'); gr.addColorStop(1,'#6e9bbd'); } else { gr.addColorStop(0,'#4a5470'); gr.addColorStop(1,'#272e42'); }
+      if(eis){ gr.addColorStop(0,'#DDF0FB'); gr.addColorStop(1,'#8FB9D9'); } else { gr.addColorStop(0,'#2F6AA3'); gr.addColorStop(1,'#164170'); }
       x.beginPath(); x.arc(c,c,curR,0,Math.PI*2); x.fillStyle=gr; x.fill();
       x.strokeStyle=eis?'rgba(255,255,255,.35)':'rgba(255,255,255,.10)'; x.lineWidth=2;
       for(const f of [.66,.33]){ x.beginPath(); x.arc(c,c,curR*f,0,Math.PI*2); x.stroke(); }
@@ -94,13 +94,13 @@
   }
 
   const g={
-    id:'scooter',name:'Scooter',icon:'🚗',
+    id:'scooter',name:'Scooter',
     desc:'Rausdrängen! Wer als Letzter in der Arena bleibt, gewinnt.',
     hint:'Dränge die anderen aus der Arena!',
     targets:[1,3,5],defTarget:3,
     options:[
       {key:'hind',label:'Hindernisse',values:[['aus','aus'],['pfeiler','Pfeiler'],['banden','Banden']],def:'aus'},
-      {key:'boden',label:'Boden',values:[['normal','normal'],['eis','Eis ❄']],def:'normal'},
+      {key:'boden',label:'Boden',values:[['normal','normal'],['eis','Eis']],def:'normal'},
       {key:'loch',label:'Wandernde Löcher',values:[['aus','aus'],['an','an']],def:'aus'},
     ],
     bot,
@@ -137,7 +137,7 @@
       if(list.length>=2&&alive.length<=1){
         let w=alive[0];
         if(!w) w=list.slice().sort((a,b)=>b.car.fallT-a.car.fallT)[0];
-        return {winners:[w],text:'🏆 '+cname(w.seat).toUpperCase()+' gewinnt die Runde!',color:w.color};
+        return {winners:[w],text:''+cname(w.seat).toUpperCase()+' gewinnt die Runde!',color:w.color};
       }
       if(list.length===1&&list[0].car.dead&&list[0].car.deadT>1.2) list[0].car=spawn(list[0].seat); // allein üben
     },
@@ -150,31 +150,31 @@
       }
       // Roter Schein am Rand: dünne Ringe statt shadowBlur/Vollkreisen (auf schwachen Geräten viel schneller)
       ctx.lineWidth=10;
-      for(let i=1;i<=3;i++){ ctx.strokeStyle='rgba(255,70,50,'+(.22-i*.05)+')'; ctx.beginPath(); ctx.arc(CX,CY,curR+i*10,0,Math.PI*2); ctx.stroke(); }
+      for(let i=1;i<=3;i++){ ctx.strokeStyle='rgba(243,146,0,'+(.22-i*.05)+')'; ctx.beginPath(); ctx.arc(CX,CY,curR+i*10,0,Math.PI*2); ctx.stroke(); }
       ctx.drawImage(getFloor(eis),CX-FLOOR/2,CY-FLOOR/2,FLOOR,FLOOR);
       // Löcher
       for(const c of cells){
         const R=RINGS[c.ring], a0=c.sec/R.n*Math.PI*2, a1=(c.sec+1)/R.n*Math.PI*2;
         ctx.beginPath(); ctx.arc(CX,CY,R.r1*curR,a0,a1); ctx.arc(CX,CY,R.r0*curR,a1,a0,true); ctx.closePath();
-        if(c.state===1){ ctx.fillStyle=Math.floor(performance.now()/150)%2?'rgba(239,68,68,.75)':'rgba(255,200,60,.55)'; }
-        else ctx.fillStyle='#04060b';
+        if(c.state===1){ ctx.fillStyle=Math.floor(performance.now()/150)%2?'rgba(243,146,0,.75)':'rgba(255,209,0,.55)'; }
+        else ctx.fillStyle='#0A2342';
         ctx.fill();
-        if(c.state===2){ ctx.lineWidth=3; ctx.strokeStyle='rgba(255,90,60,.6)'; ctx.stroke(); }
+        if(c.state===2){ ctx.lineWidth=3; ctx.strokeStyle='rgba(243,146,0,.6)'; ctx.stroke(); }
       }
-      ctx.lineWidth=14; ctx.strokeStyle='#f5c518'; ctx.beginPath(); ctx.arc(CX,CY,curR+2,0,Math.PI*2); ctx.stroke();
-      ctx.save(); ctx.setLineDash([22,22]); ctx.strokeStyle='#15171f';
+      ctx.lineWidth=14; ctx.strokeStyle='#FFD100'; ctx.beginPath(); ctx.arc(CX,CY,curR+2,0,Math.PI*2); ctx.stroke();
+      ctx.save(); ctx.setLineDash([22,22]); ctx.strokeStyle='#0D2B4E';
       ctx.beginPath(); ctx.arc(CX,CY,curR+2,0,Math.PI*2); ctx.stroke(); ctx.restore();
       // Hindernisse
       for(const o of obstacles){
         ctx.lineCap='round';
-        ctx.strokeStyle='#1a1d26'; ctx.lineWidth=o.r*2+6; ctx.beginPath(); ctx.moveTo(o.ax,o.ay); ctx.lineTo(o.bx,o.by); ctx.stroke();
-        ctx.strokeStyle='#d9534a'; ctx.lineWidth=o.r*2-4; ctx.beginPath(); ctx.moveTo(o.ax,o.ay); ctx.lineTo(o.bx,o.by); ctx.stroke();
+        ctx.strokeStyle='#123A63'; ctx.lineWidth=o.r*2+6; ctx.beginPath(); ctx.moveTo(o.ax,o.ay); ctx.lineTo(o.bx,o.by); ctx.stroke();
+        ctx.strokeStyle='#F39200'; ctx.lineWidth=o.r*2-4; ctx.beginPath(); ctx.moveTo(o.ax,o.ay); ctx.lineTo(o.bx,o.by); ctx.stroke();
         ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(o.ax-3,o.ay-3); ctx.lineTo(o.bx-3,o.by-3); ctx.stroke();
         ctx.lineCap='butt';
       }
       for(const p of present()) drawCar(p);
       if(phase==='play'){
-        if(arenaT>14&&arenaT<18) text('⚠ Die Arena schrumpft!',CX,CY-250,34,'#ffd24a','800');
+        if(arenaT>14&&arenaT<18) text('Achtung: Die Arena schrumpft!',CX,CY-250,34,'#FFD100','800');
       }
     },
   };
